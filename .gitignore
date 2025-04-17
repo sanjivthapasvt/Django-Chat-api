@@ -2,3 +2,4 @@ venv
 .env
 media/
 statics/
+__pycache__/
