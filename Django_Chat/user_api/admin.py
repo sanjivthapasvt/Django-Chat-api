@@ -6,7 +6,7 @@ class UserAdmin(UserAdmin):
     model = User
     list_display = ['username', 'email', 'first_name', 'last_name', 'is_staff']
     fieldsets = UserAdmin.fieldsets + (
-        ('Additional Info', {'fields': ('profile_image',)}),
+        ('Additional Info', {'fields': ('profile_pic',)}),
     )
 
 admin.site.register(User, UserAdmin)

@@ -1,6 +1,8 @@
 from .models import User
 from rest_framework import serializers
-
+from django.contrib.auth.password_validation import validate_password
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
@@ -54,3 +56,46 @@ class UserLoginSerializer(serializers.Serializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
+
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
+    confirm_password = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email", "profile_pic", "old_password", "new_password", "confirm_password"]
+
+    def validate(self, data):
+            # Check if any password field is provided
+            if any(field in data for field in ['old_password', 'new_password', 'confirm_password']):
+                user = self.instance
+
+                if not user.check_password(data.get('old_password', '')):
+                    raise serializers.ValidationError({'old_password': 'Old password is incorrect.'})
+
+                if data.get('new_password') != data.get('confirm_password'):
+                    raise serializers.ValidationError({'confirm_password': 'New passwords do not match.'})
+
+                validate_password(data['new_password'], user)
+
+            return data
+
+    def update(self, instance, validated_data):
+        # Remove password fields from the update
+        validated_data.pop('old_password', None)
+        new_password = validated_data.pop('new_password', None)
+        validated_data.pop('confirm_password', None)
+
+        # Update basic fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Update password if provided
+        if new_password:
+            instance.set_password(new_password)
+
+        instance.save()
+        return instance

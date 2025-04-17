@@ -1,9 +1,12 @@
-from .serializers import UserRegisterSerializer, UserLoginSerializer, LogoutSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, LogoutSerializer, UserProfileUpdateSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import status
+from rest_framework import status, generics
+from rest_framework.parsers import MultiPartParser, FormParser
+
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     return {
@@ -55,3 +58,12 @@ class LogoutView(GenericAPIView):
             except Exception as e:
                 return Response({"message": "Error logging out", "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get_object(self):
+        return self.request.user

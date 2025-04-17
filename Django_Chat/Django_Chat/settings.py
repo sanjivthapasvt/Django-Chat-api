@@ -50,7 +50,7 @@ MIDDLEWARE = [
 AUTH_USER_MODEL = "user_api.User" #custom user
 
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.UsernameOrEmailBackend',  # Custom backend
+    'user_api.backends.UsernameOrEmailBackend',  # Custom backend
     'django.contrib.auth.backends.ModelBackend', # Django's default as fallback
 ]
 
@@ -75,6 +75,12 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+SPECTACULAR_SETTINGS = {
+    'COMPONENT_SPLIT_REQUEST': True
+}
+
+
 
 #end of custom change
 
