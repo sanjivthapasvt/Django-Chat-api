@@ -1,0 +1,14 @@
+django
+djangorestframework
+djangorestframework-simplejwt
+psycopg2-binary
+python-dotenv
+django-cors-headers
+Pillow
+drf-spectacular
+drf-yasg
+dj-database-url
+whitenoise
+requests
+django_jsonform
+python-magic
