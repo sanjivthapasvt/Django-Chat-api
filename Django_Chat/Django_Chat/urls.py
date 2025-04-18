@@ -30,6 +30,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     #for user_api
     path('api/', include('user_api.urls'), name="authentication"),
+    #for chat_room
+    path('api/',include('chat_room.urls', name='chat_room'))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
