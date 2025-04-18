@@ -1,8 +1,14 @@
 from .models import User
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.types import OpenApiTypes
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for basic user information"""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'profile_pic']
+        read_only_fields = ['id', 'username', 'email']
+        
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
