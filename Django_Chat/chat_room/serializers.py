@@ -99,6 +99,7 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         participant_ids = validated_data.pop('participant_ids', [])
         creator = self.context['request'].user
         
+        validated_data.pop('creator', None)
         # Create the chat room
         chat_room = ChatRoom.objects.create(
             creator=creator,
