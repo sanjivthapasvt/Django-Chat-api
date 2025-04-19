@@ -4,7 +4,6 @@ from drf_spectacular.utils import extend_schema_field
 from .user_serializers import BasicUserSerializer
 from ..models import ChatRoom
 from .message_serializers import BasicMessageSerializer
-from .typing_serializers import TypingStatusSerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -60,23 +59,37 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
     participant_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
-        required=False
+        required=False,
+        help_text="List of user IDs to add as participants (excluding the creator)"
     )
 
     class Meta:
         model = ChatRoom
         fields = ['room_name', 'is_group', 'participant_ids', 'group_image']
+        read_only_fields = ['creator']
 
     def create(self, validated_data):
         participant_ids = validated_data.pop('participant_ids', [])
         creator = self.context['request'].user
         validated_data.pop('creator', None)
+
         chat_room = ChatRoom.objects.create(creator=creator, **validated_data)
-        chat_room.participants.add(creator)
+
+        all_initial_participant_users = [creator] #creator
+        # Fetch users for the provided IDs
+        users_from_ids = User.objects.filter(id__in=participant_ids)
+        all_initial_participant_users.extend(users_from_ids)
+
+        # 3. Add ALL initial participants in ONE ManyToMany operation
+        chat_room.participants.set(all_initial_participant_users)
+
         if chat_room.is_group:
-            chat_room.admins.add(creator)
-        for user_id in participant_ids:
-            user = User.objects.filter(id=user_id).first()
-            if user:
-                chat_room.participants.add(user)
+             chat_room.admins.add(creator) # Add creator as admin
+
         return chat_room
+
+class AddMemberSerializer(serializers.Serializer):
+    users = serializers.ListField(child=serializers.IntegerField(), help_text="Id of users to add to gc")
+
+class RemoveMemberSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(help_text="ID of the user to remove")

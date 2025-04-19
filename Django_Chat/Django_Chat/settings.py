@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     'django_jsonform',
-    'chat_room',
+    'chat_room.apps.ChatRoomConfig',
     'channels',
 ]
 

@@ -1,5 +1,5 @@
 # serializers/__init__.py
-from .chatroom_serializers import ChatRoomSerializer, ChatRoomCreateSerializer
+from .chatroom_serializers import ChatRoomSerializer, ChatRoomCreateSerializer, AddMemberSerializer, RemoveMemberSerializer
 from .message_serializers import (
     MessageSerializer, MessageCreateSerializer,
     MessageReadStatusSerializer, BasicMessageSerializer
@@ -9,7 +9,7 @@ from .notification_serializers import NotificationSerializer
 from .typing_serializers import TypingStatusSerializer
 
 __all__ = [
-    "ChatRoomSerializer", "ChatRoomCreateSerializer",
+    "ChatRoomSerializer", "ChatRoomCreateSerializer", "AddMemberSerializer", "RemoveMemberSerializer",
     "MessageSerializer", "MessageCreateSerializer",
     "MessageReadStatusSerializer", "BasicMessageSerializer",
     "BasicUserSerializer", "NotificationSerializer",

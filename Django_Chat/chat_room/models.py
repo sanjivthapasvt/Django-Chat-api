@@ -36,12 +36,6 @@ class ChatRoom(models.Model):
         # Save the room first
         super().save(*args, **kwargs)
         
-        # If this is a new group, set default room name if not provided
-        if is_new and self.is_group and not self.room_name:
-            participants = self.participants.all()[:3]
-            self.room_name = f"Group ({', '.join(user.username for user in participants)})"
-            # Save again with the new name
-            super().save(update_fields=['room_name'])
     
     def add_participant(self, user, is_admin=False):
         """Add a participant to the room"""
@@ -66,7 +60,6 @@ class ChatRoom(models.Model):
         self.save(update_fields=['last_message'])
     
     def convert_to_group(self, creator_user):
-        """Convert a private chat to a group chat"""
         if not self.is_group:
             # Create a new group chat
             group_chat = ChatRoom.objects.create(
@@ -75,13 +68,15 @@ class ChatRoom(models.Model):
                 room_name=self.room_name,
                 group_image=self.group_image
             )
-            
-            # Add existing participants
-            existing_participants = self.participants.all()
-            for participant in existing_participants:
-                group_chat.participants.add(participant)
-                # Make original users admins
-                group_chat.admins.add(participant)
+
+            # Get existing participants and add the creator to the list
+            existing_participants = list(self.participants.all())
+            all_initial_participants = existing_participants + [creator_user]
+
+            # add aLL initial participants using set()
+            group_chat.participants.set(all_initial_participants)
+
+            group_chat.admins.set(existing_participants)
             
             return group_chat
         return self
