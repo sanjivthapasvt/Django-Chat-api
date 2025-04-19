@@ -1,5 +1,5 @@
 
-# 🗨️ Django Chat App
+# 🗨️ Django Chat API
 
 A powerful, scalable chat backend built using **Django** and **Django REST Framework**, supporting **private messaging**, **group chats**, **notifications**, **typing indicators**, **read receipts**, **admin roles**, and much more.
 
