@@ -12,3 +12,5 @@ whitenoise
 requests
 django_jsonform
 python-magic
+channels
+channels_redis
