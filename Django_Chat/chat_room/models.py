@@ -71,7 +71,9 @@ class ChatRoom(models.Model):
             # Create a new group chat
             group_chat = ChatRoom.objects.create(
                 is_group=True,
-                creator=creator_user
+                creator=creator_user,
+                room_name=self.room_name,
+                group_image=self.group_image
             )
             
             # Add existing participants

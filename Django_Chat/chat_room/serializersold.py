@@ -4,6 +4,14 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+#All serialier in this file
+    # BasicUserSerializer,
+    # ChatRoomSerializer, ChatRoomCreateSerializer
+    # MessageCreateSerializer, MessageReadStatusSerializer, BasicMessageSerializer, MessageSerializer
+    # NotificationSerializer
+    # TypingStatusSerializer
+
+
 class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -63,19 +71,36 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     last_message = BasicMessageSerializer(read_only=True)
     participants_count = serializers.SerializerMethodField()
     typing_users = serializers.SerializerMethodField()
-    
+    is_admin = serializers.SerializerMethodField()
+    group_image_url = serializers.SerializerMethodField()
+    room_type = serializers.SerializerMethodField()
     class Meta:
         model = ChatRoom
         fields = [
             'id', 'room_name', 'is_group', 'created_at', 'creator',
             'participants', 'admins', 'participants_count',
             'sharable_room_id', 'last_message', 'group_image',
-            'typing_users'
+            'typing_users', 'is_admin', 'room_type'
         ]
         read_only_fields = ['creator', 'sharable_room_id', 'created_at']
     
     def get_participants_count(self, obj):
         return obj.participants.count()
+    
+    def get_is_admin(self, obj):
+        request = self.context.get('request')
+        if request and request.user in obj.admins.all():
+            return True
+        return False
+
+    def get_room_type(self, obj):
+        return "group" if obj.is_group else "private"
+    
+    def get_group_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.group_image:
+            return request.build_absolute_uri(obj.group_image.url)
+        return None
     
     def get_typing_users(self, obj):
         # users currently typing in this room
@@ -115,8 +140,9 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         # Add other participants
         for user_id in participant_ids:
             try:
-                user = User.objects.get(id=user_id)
-                chat_room.participants.add(user)
+                user = User.objects.filter(id=user_id).first()
+                if user:
+                    chat_room.participants.add(user)
             except User.DoesNotExist:
                 pass
         
