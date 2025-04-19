@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_jsonform',
     'chat_room',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,20 @@ SIMPLE_JWT = {
 SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True
 }
+
+
+ASGI_APPLICATION = "Django_Chat.asgi.application"
+
+#channel
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
 
 
 

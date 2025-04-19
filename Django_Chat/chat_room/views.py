@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from .models import ChatRoom
 from .serializers import ChatRoomSerializer, ChatRoomCreateSerializer
 from rest_framework.permissions import IsAuthenticated
-
+from .permissions import IsRoomAdmin, IsRoomParticipant, IsMessageSender
 class ChatRoomViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
