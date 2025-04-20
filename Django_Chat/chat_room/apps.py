@@ -8,7 +8,6 @@ class ChatRoomConfig(AppConfig):
     
 
     def ready(self):
-        print("ChatRoomIsReady is ready, importing signals...") # <-- Add print for debugging
         try:
             from . import signals
         except ImportError:
