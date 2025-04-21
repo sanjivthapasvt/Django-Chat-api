@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django_jsonform',
     'chat_room.apps.ChatRoomConfig',
     'channels',
+    'daphne',
 ]
 
 MIDDLEWARE = [
@@ -94,7 +95,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
 
 
 

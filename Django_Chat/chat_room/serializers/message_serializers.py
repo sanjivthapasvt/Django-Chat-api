@@ -33,6 +33,6 @@ class MessageCreateSerializer(serializers.ModelSerializer):
         model = Message
         fields = ['room', 'content', 'image']
     
-    def create(self, validated_data):
+    def create(self, validated_data) -> Message:
         sender = self.context['request'].user
         return Message.objects.create(sender=sender, **validated_data)

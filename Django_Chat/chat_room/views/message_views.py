@@ -8,6 +8,6 @@ from ..permissions import IsMessageSender, IsRoomParticipant
 class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Message.objects.all()
-    @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated, IsRoomParticipant])
-    def send_message(self, request, pk=None):
+    @action(detail=True, methods=["GET"], permission_classes=[IsAuthenticated, IsRoomParticipant])
+    def list(self, request):
         message = self.get_object()
