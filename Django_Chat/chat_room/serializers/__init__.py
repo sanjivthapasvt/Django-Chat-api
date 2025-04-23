@@ -1,4 +1,3 @@
-# serializers/__init__.py
 from .chatroom_serializers import ChatRoomSerializer, ChatRoomCreateSerializer, AddMemberSerializer, RemoveMemberSerializer
 from .message_serializers import (
     MessageSerializer, MessageCreateSerializer,
