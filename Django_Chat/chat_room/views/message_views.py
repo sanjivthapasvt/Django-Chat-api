@@ -17,7 +17,21 @@ class MessageViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsMessageSender()]
         return super().get_permissions()
     
-    
     def get_queryset(self):
         chatroom_id = self.kwargs['chatroom_pk']
         return Message.objects.filter(room_id=chatroom_id).order_by('-timestamp')
+    
+    def perform_create(self, serializer):
+        message = serializer.save()
+        
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+        
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{message.room.id}",
+            {
+                "type": "chat.message",
+                "message": MessageSerializer(message).data
+            }
+        )
