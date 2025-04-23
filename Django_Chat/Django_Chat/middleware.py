@@ -1,5 +1,4 @@
 from urllib.parse import parse_qs
-from rest_framework_simplejwt.tokens import UntypedToken
 from django.contrib.auth.models import AnonymousUser
 from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
