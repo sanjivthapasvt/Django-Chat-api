@@ -24,6 +24,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         message = serializer.save()
         
+        #for communicating with websocket
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
         
