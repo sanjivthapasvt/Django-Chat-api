@@ -1,9 +1,25 @@
 from ..serializers import MessageSerializer, MessageCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from ..models import Message
-
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import viewsets
 from ..permissions import IsMessageSender, IsRoomParticipant
+
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+
+#for drf_spectacular documentation
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='chatroom_pk',
+            description='ID of the chatroom',
+            required=True,
+            type=int,
+            location=OpenApiParameter.PATH
+        )
+    ]
+)
 class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Message.objects.all()
@@ -20,6 +36,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         chatroom_id = self.kwargs['chatroom_pk']
         return Message.objects.filter(room_id=chatroom_id).order_by('-timestamp')
+
     
     def perform_create(self, serializer):
         message = serializer.save()
