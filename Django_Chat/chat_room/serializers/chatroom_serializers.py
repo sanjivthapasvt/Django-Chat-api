@@ -80,7 +80,7 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         users_from_ids = User.objects.filter(id__in=participant_ids)
         all_initial_participant_users.extend(users_from_ids)
 
-        # 3. Add ALL initial participants in ONE ManyToMany operation
+        # add aLL initial participants in ONE ManyToMany operation
         chat_room.participants.set(all_initial_participant_users)
 
         if chat_room.is_group:
