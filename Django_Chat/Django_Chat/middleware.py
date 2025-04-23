@@ -1,4 +1,3 @@
-# chat_room/middleware.py
 from urllib.parse import parse_qs
 from rest_framework_simplejwt.tokens import UntypedToken
 from django.contrib.auth.models import AnonymousUser
