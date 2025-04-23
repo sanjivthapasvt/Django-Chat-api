@@ -3,3 +3,4 @@ venv
 media/
 statics/
 __pycache__/
+db.sqlite3

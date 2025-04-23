@@ -12,5 +12,7 @@ whitenoise
 requests
 django_jsonform
 python-magic
+daphne
 channels
 channels_redis
+drf_nested_routers
