@@ -1,4 +1,4 @@
-from ..serializers import MessageSerializer
+from ..serializers import MessageSerializer, MessageCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from ..models import Message
 
@@ -7,7 +7,10 @@ from ..permissions import IsMessageSender, IsRoomParticipant
 class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Message.objects.all()
-    serializer_class = MessageSerializer
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return MessageCreateSerializer
+        return MessageSerializer
     
     def get_permissions(self):
         if self.action in['update', 'partial_update', 'destroy']:
@@ -16,5 +19,5 @@ class MessageViewSet(viewsets.ModelViewSet):
     
     
     def get_queryset(self):
-        room_id = self.request.query_params.get("room_id")
-        return Message.objects.filter(room_id=room_id).order_by('timestamp')
+        chatroom_id = self.kwargs['chatroom_pk']
+        return Message.objects.filter(room_id=chatroom_id).order_by('-timestamp')
