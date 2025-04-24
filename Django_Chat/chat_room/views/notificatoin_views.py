@@ -14,7 +14,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user).order_by('-timestamp')
     
-    @action(detail=False, methods=['GET'])
+    @action(detail=False, methods=['get'])
     def unread(self):
         unread_notifications = Notification.objects.filter(
             user = self.request.user,
@@ -23,14 +23,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(unread_notifications, many=True)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['post'])
     def mark_read(self, request, pk=None):
         notification = self.get_object()
         notification.is_read = True
         notification.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-    @action(detail=False, methods=['POST'])
+    @action(detail=False, methods=['post'])
     def mark_all_read(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

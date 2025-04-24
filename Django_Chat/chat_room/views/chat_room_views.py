@@ -27,7 +27,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         request=AddMemberSerializer,
         responses={200: ChatRoomCreateSerializer}
     )
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated, IsRoomParticipant])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsRoomParticipant])
     def add_members(self, request, pk=None):
         room = self.get_object()
         new_user_ids = request.data.get("users", [])
@@ -73,7 +73,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
                    405: OpenApiResponse(description="Cannot remove member from private chat")
                    }
     )
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated, IsRoomAdmin])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsRoomAdmin])
     def remove_member(self, request, pk=None):
         room = self.get_object()
         if not room.is_group: #if this is private room user are not allowed to leave or remove user
@@ -88,7 +88,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         room.admins.remove(user)
         return Response({"detail": "User removed successfully"})
 
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated, IsRoomParticipant])
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated, IsRoomParticipant])
     def participants(self, request, pk=None):
         room = self.get_object()
         data = []
@@ -107,7 +107,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
                    }
     )
     
-    @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated, IsRoomAdmin])
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated, IsRoomAdmin])
     def assign_admin(self, request, pk=None):
         room = self.get_object()
         if not room.is_group:#no admin in private chat
@@ -122,7 +122,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         room.admins.add(user)
         return Response({"detail": f"{user.username} is now an admin."})
 
-    @action(detail=True, methods=["GET"], permission_classes=[IsAuthenticated, IsRoomParticipant])
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated, IsRoomParticipant])
     def shareable_link(self, request, pk=None):
         room = self.get_object()
         return Response({"room_id": room.sharable_room_id})

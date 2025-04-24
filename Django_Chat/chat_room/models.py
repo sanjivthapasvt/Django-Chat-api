@@ -140,6 +140,9 @@ class MessageReadStatus(models.Model):
     
     class Meta:
         unique_together = ('message', 'user')
+        indexes = [
+            models.Index(fields=['user', 'message']),
+        ]
 
 
 class Notification(models.Model):
@@ -160,12 +163,6 @@ class Notification(models.Model):
             models.Index(fields=['user', 'is_read']),
             models.Index(fields=['timestamp']),
         ]
-        # constraints = [
-        #     models.UniqueConstraint(
-        #         fields=['user', 'message'],
-        #         name='unique_notification'
-        #     )
-        # ]
         ordering = ['-timestamp']
     def __str__(self):
         return f"Notification for {self.user.username}: {self.notification_type}"

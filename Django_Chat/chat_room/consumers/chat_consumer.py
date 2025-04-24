@@ -1,10 +1,10 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import json
 from channels.exceptions import DenyConnection
 from ..models import ChatRoom
 from channels.db import database_sync_to_async
 
-class ChatConsumer(AsyncWebsocketConsumer):
+class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.room_id = int(self.scope['url_route']['kwargs']['chatroom_id'])
         self.room_group_name = f'chat_{self.room_id}'

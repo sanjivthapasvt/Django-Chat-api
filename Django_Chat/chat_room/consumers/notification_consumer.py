@@ -1,12 +1,12 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from ..models import Notification
 
 User = get_user_model()
 
-class NotificationConsumer(AsyncWebsocketConsumer):
+class NotificationConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.user = self.scope["user"]
         
