@@ -1,6 +1,8 @@
 from datetime import timedelta
 from pathlib import Path
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,6 +38,7 @@ INSTALLED_APPS = [
     'django_jsonform',
     'chat_room.apps.ChatRoomConfig',
     'channels',
+    'push_notifications',
 ]
 
 MIDDLEWARE = [
@@ -102,6 +105,14 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+
+#for firebase cloud messaging
+# PUSH_NOTIFICATIONS_SETTINGS = {
+#     "FCM_API_KEY": os.getenv("FCM_API_KEY"),
+#     "FCM_APP_ID": os.getenv("FCM_APP_ID"),
+#     "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
+#     "FCM_POST_URL": os.getenv("FCM_POST_URL"),
+# }
 
 #end of custom change
 

@@ -3,7 +3,10 @@ from django.dispatch import receiver
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import ChatRoom, Message, Notification
-
+import logging
+from django.db import transaction
+from django.db import IntegrityError
+logger = logging.getLogger(__name__)
 
 @receiver(m2m_changed, sender=ChatRoom.participants.through)
 def update_group_room_name(sender, instance, action, pk_set, **kwargs):
@@ -14,7 +17,6 @@ def update_group_room_name(sender, instance, action, pk_set, **kwargs):
     # Only proceed if participants have been added, it's a group, and the name is not already set
     if action == 'post_add' and instance.is_group and not instance.room_name:
         try:
-            # Refresh the instance from the database to ensure participants are up-to-date
             instance.refresh_from_db()
 
             participants = instance.participants.all()
@@ -30,8 +32,7 @@ def update_group_room_name(sender, instance, action, pk_set, **kwargs):
                 instance.save(update_fields=['room_name'])
 
         except Exception as e:
-            # debbuging
-            print(f"Error updating group room name for room {instance.id}: {e}")
+            logger.error(f"Error updating group room name for room {instance.id}: {e}")
 
 
 #Signals for notficatoin
@@ -42,31 +43,40 @@ def create_message_notification(sender, instance, created, **kwargs):
     
     chatroom = instance.room
     participants = chatroom.participants.all()
-    
-    for user in participants:#skip creating notification for sender
+
+    notifications = []    
+
+    for user in participants:
         if user == instance.sender:
             continue
         
-        #create notification
-        notification = Notification.objects.create(
+        notification = Notification(
             user=user,
-            messsage=instance,
-            notification_type = "new_message"
+            message=instance,
+            notification_type="new_message"
         )
-        
-        #send realtime notification via websocket
-        channel_layer = get_channel_layer()
+        notifications.append(notification)
+
+    try:
+        with transaction.atomic():
+            Notification.objects.bulk_create(notifications)
+    except Exception as e:
+        logger.error(f"Error creating notifications for message {instance.id}: {e}")
+
+    channel_layer = get_channel_layer()
+    for notification in notifications:
         async_to_sync(channel_layer.group_send)(
-            f"notificatoin_{user.id}",
+            f"notificatoin_{notification.user.id}",
             {
                 "type": "send_notification",
-                "message_id": instance.id,
-                "sender": instance.sender.username,
-                "room_id": chatroom.id,
-                "content": instance.content[:50] + '...' if len(instance.content) >50 else instance.content,
-                "timestamp": notification.timestamp.isoformat(),
-                "is_read": False,
-                "notification_type": notification.notification_type
-         
+                "message": {
+                    "message_id": instance.id,
+                    "sender": instance.sender.username,
+                    "room_id": chatroom.id,
+                    "content": instance.content[:50] + '...' if len(instance.content) > 50 else instance.content,
+                    "timestamp": notification.timestamp.isoformat() if notification.timestamp else None,
+                    "is_read": False,
+                    "notification_type": notification.notification_type
+                }
             }
         )

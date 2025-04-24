@@ -2,7 +2,6 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ChatRoomViewSet, MessageViewSet
 from rest_framework_nested.routers import NestedDefaultRouter
-
 router = DefaultRouter()
 router.register(r'chatrooms', ChatRoomViewSet, basename='chatroom')
 

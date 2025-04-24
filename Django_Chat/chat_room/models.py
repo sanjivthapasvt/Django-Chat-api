@@ -115,7 +115,7 @@ class Message(models.Model):
     image = models.ImageField(upload_to="chat/images", blank=True, null=True)
     
     class Meta:
-        ordering = ['timestamp']
+        ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['room', 'timestamp']),
             models.Index(fields=['content']),  # For message searching
@@ -131,15 +131,6 @@ class Message(models.Model):
         if is_new:
             # Update the last message in the room
             self.room.update_last_message(self)
-            
-            # Create notification for all participants except sender
-            for user in self.room.participants.exclude(pk=self.sender.pk):
-                Notification.objects.create(
-                    user=user,
-                    message=self,
-                    is_read=False
-                )
-
 
 class MessageReadStatus(models.Model):
     """Model to Track read status of messages per user"""
@@ -157,8 +148,24 @@ class Notification(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
-    notification_type = models.CharField(max_length=50, default="new_message")
+    NOTIFICATION_TYPES = (
+        ('new_message', 'New Message'),
+        ('mention', 'Mention'),
+        ('room_invite', 'Room Invite'),
+        ('system', 'System Notification')
+    )
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES, default='new_message')
     class Meta:
         indexes = [
             models.Index(fields=['user', 'is_read']),
+            models.Index(fields=['timestamp']),
         ]
+        # constraints = [
+        #     models.UniqueConstraint(
+        #         fields=['user', 'message'],
+        #         name='unique_notification'
+        #     )
+        # ]
+        ordering = ['-timestamp']
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.notification_type}"
