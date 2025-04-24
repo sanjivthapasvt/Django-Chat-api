@@ -29,10 +29,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         # Send any existing unread notifications on connect
         unread_notifications = await self.get_unread_notifications()
         if unread_notifications:
-            await self.send(text_data=json.dumps({
+            await self.send_json({
                 'type': 'notification_list',
                 'notifications': unread_notifications
-            }))
+            })
     
     async def disconnect(self, close_code):
         # Leave the notification group
@@ -50,45 +50,45 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             if action == 'mark_read':
                 notification_id = text_data_json.get('notification_id')
                 success = await self.mark_notification_read(notification_id)
-                await self.send(text_data=json.dumps({
+                await self.send_json({
                     'type': 'mark_read_response',
                     'notification_id': notification_id,
                     'success': success
-                }))
+                })
             
             elif action == 'mark_all_read':
                 count = await self.mark_all_notifications_read()
-                await self.send(text_data=json.dumps({
+                await self.send_json({
                     'type': 'mark_all_read_response',
                     'count': count,
                     'success': True
-                }))
+                })
                 
             elif action == 'get_unread':
                 unread_notifications = await self.get_unread_notifications()
-                await self.send(text_data=json.dumps({
+                await self.send_json({
                     'type': 'notification_list',
                     'notifications': unread_notifications
-                }))
+                })
         
         except json.JSONDecodeError:
-            await self.send(text_data=json.dumps({
+            await self.send_json({
                 'type': 'error',
                 'message': 'Invalid JSON format'
-            }))
+            })
         except Exception as e:
-            await self.send(text_data=json.dumps({
+            await self.send_json({
                 'type': 'error',
                 'message': str(e)
-            }))
+            })
     
     # Receive message from notification group
     async def send_notification(self, event):
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({
+        await self.send_json({
             'type': 'new_notification',
             'notification': event['message']
-        }))
+        })
     
     @database_sync_to_async
     def get_unread_notifications(self):
