@@ -1,6 +1,6 @@
 # In your app's admin.py file
 from django.contrib import admin
-from .models import ChatRoom, Message, TypingStatus, MessageReadStatus, Notification
+from .models import ChatRoom, Message, MessageReadStatus, Notification
 
 @admin.register(ChatRoom)
 class ChatRoomAdmin(admin.ModelAdmin):
@@ -17,10 +17,6 @@ class MessageAdmin(admin.ModelAdmin):
     search_fields = ('content',)
     date_hierarchy = 'timestamp'
 
-@admin.register(TypingStatus)
-class TypingStatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'room', 'user', 'timestamp')
-    list_filter = ('timestamp',)
 
 @admin.register(MessageReadStatus)
 class MessageReadStatusAdmin(admin.ModelAdmin):

@@ -106,15 +106,6 @@ class ChatRoom(models.Model):
         return new_room, True
 
 
-class TypingStatus(models.Model):
-    """Model to track who is currently typing in which room"""
-    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='typing_statuses')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Updates whenever the status is saved
-    timestamp = models.DateTimeField(auto_now=True) 
-    
-    class Meta:
-        unique_together = ('room', 'user')
-
 
 class Message(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')

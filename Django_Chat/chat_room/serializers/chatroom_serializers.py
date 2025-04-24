@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from typing import List, Dict, Any, Optional
+from typing import Optional
 from drf_spectacular.utils import extend_schema_field
 from .user_serializers import BasicUserSerializer
 from ..models import ChatRoom
@@ -14,7 +14,6 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     creator = BasicUserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
     participants_count = serializers.SerializerMethodField()
-    typing_users = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
     group_image_url = serializers.SerializerMethodField()
     room_type = serializers.SerializerMethodField()
@@ -25,7 +24,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             'id', 'room_name', 'is_group', 'created_at', 'creator',
             'participants', 'admins', 'participants_count',
             'sharable_room_id', 'last_message', 'group_image',
-            'typing_users', 'is_admin', 'room_type', 'group_image_url'
+            'is_admin', 'room_type', 'group_image_url'
         ]
         read_only_fields = ['creator', 'sharable_room_id', 'created_at']
 
@@ -49,10 +48,6 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.group_image.url)
         return None
 
-    @extend_schema_field(List[Dict[str, Any]])
-    def get_typing_users(self, obj) -> List[Dict[str, Any]]:
-        typing_statuses = obj.typing_statuses.all()
-        return [BasicUserSerializer(status.user).data for status in typing_statuses]
 
 
 class ChatRoomCreateSerializer(serializers.ModelSerializer):

@@ -4,3 +4,4 @@ media/
 statics/
 __pycache__/
 db.sqlite3
+testing.html

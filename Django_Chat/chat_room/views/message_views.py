@@ -2,10 +2,8 @@ from ..serializers import MessageSerializer, MessageCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 from ..models import Message
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.types import OpenApiTypes
 from rest_framework import viewsets
 from ..permissions import IsMessageSender, IsRoomParticipant
-
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 #for drf_spectacular documentation
