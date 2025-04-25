@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -36,6 +36,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         if not room.is_group:
             existing_user_ids = room.participants.values_list("id", flat=True)
             duplicate_users = set(existing_user_ids).intersection(user_to_add.values_list("id", flat=True))
+            
             if duplicate_users:
                 return Response({"detail": "One or more users are already in the room"}, status=400)
 
@@ -71,22 +72,36 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         request=RemoveMemberSerializer,
         responses={200: ChatRoomSerializer,
                    405: OpenApiResponse(description="Cannot remove member from private chat")
-                   }
-    )
+                   })
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsRoomAdmin])
     def remove_member(self, request, pk=None):
         room = self.get_object()
-        if not room.is_group: #if this is private room user are not allowed to leave or remove user
-            raise MethodNotAllowed(detail="Cannot remove members in private chat")
-        user_id = request.data.get("user_id")
 
-        if user_id == self.request.user.id:
-            return Response({"detail": "Cannot remove yourself"})
+        if not room.is_group:
+            raise MethodNotAllowed(method='POST', detail="Cannot remove members in private chat.")
+
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"detail": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user_id == request.user.id:
+            return Response({"detail": "You cannot remove yourself from the room."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(User, id=user_id)
+
+        if user not in room.participants.all():
+            return Response({"detail": "User is not a participant in this room."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if user in room.admins.all() and room.admins.count() == 1:
+            return Response({"detail": "You cannot remove the last admin."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         room.participants.remove(user)
         room.admins.remove(user)
-        return Response({"detail": "User removed successfully"})
+
+        return Response({"detail": "User removed successfully."}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated, IsRoomParticipant])
     def participants(self, request, pk=None):
@@ -100,6 +115,25 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             })
         return Response(data)
 
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsRoomParticipant])
+    def leave_room(self, request, pk=None):
+        room = self.get_object()
+        
+        if not room.is_group:
+            raise MethodNotAllowed(method='POST', detail="Cannot leave private room")
+        
+        user = request.user
+        
+        if user not in room.participants.all():
+            return Response({"detail": "You are not a participant of this room."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user in room.admins.all() and room.admins.count() == 1:
+            return Response({"detail": "You are the last admin. Assign a new admin before leaving."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        room.participants.remove(user)
+        room.admins.remove(user)
+        return Response({"detail": "Successfully left the room"},status=status.HTTP_200_OK)
+    
     @extend_schema(
         request=RemoveMemberSerializer,
         responses={200: ChatRoomSerializer,
