@@ -10,7 +10,8 @@ A powerful, scalable chat backend built using **Django** and **Django REST Frame
 - **User Chats**
   - 1-to-1 private chats
   - Group chats with multiple participants
-  - Message read status and typing indicators
+  - Message read status
+  - Typing indicators
 
 - **Groups**
   - Create and manage group chats
@@ -21,24 +22,29 @@ A powerful, scalable chat backend built using **Django** and **Django REST Frame
 
 - **Messages**
   - Text messaging
-  - Search through messages (planned)
-  - Track read/unread messages
+  - Search through messages (soon)
+  - Read/unread message tracking
   - Last message preview in room
 
 - **Notifications**
-  - Receive updates when new messages arrive (in progress)
+  - In-app notifications
+  - Notification history stored in database
+  - Receive updates when new messages arrive
+  - Push Notifications(soon)
 
 - **User Management**
   - Register/login/logout
+  - Add/remove friends
+  - See mutual friends
   - Custom user profiles
   - Admin-only permissions for certain actions
 
-## 🧱 Tech Stack
+## 🛠️ Tech Stack
 
 - **Backend:** Django, Django REST Framework
 - **Authentication:** Token-based
 - **Database:** PostgreSQL (recommended)
-- **Realtime:** WebSockets integration coming soon
+- **Realtime:** WebSocket via Django Channels
 - **Frontend:** To be built (React/Android app coming soon)
 
 ## 📦 API Endpoints
@@ -69,20 +75,52 @@ A powerful, scalable chat backend built using **Django** and **Django REST Frame
 - `PUT /api/profile/` — Update user profile
 - `PATCH /api/profile/` — Partially update profile
 
+### 🔹 Friends
+
+- `POST /api/add-friend/` — Send a friend request
+- `GET /api/mutual-friends/` — Get mutual friends
+- `GET /api/friend-requests/` — Retrieve all friend requests
+- `POST /api/friend-requests/` — Create a friend request
+- `GET /api/friend-requests/{id}/` — Retrieve a specific friend request
+- `PUT /api/friend-requests/{id}/` — Update a friend request
+- `PATCH /api/friend-requests/{id}/` — Partially update a friend request
+- `DELETE /api/friend-requests/{id}/` — Delete a friend request
+- `POST /api/friend-requests/{id}/accept/` — Accept a friend request
+- `POST /api/friend-requests/{id}/cancel/` — Cancel a friend request
+- `POST /api/friend-requests/{id}/reject/` — Reject a friend request
+- `GET /api/friends/list_friends/` — List all friends
+- `GET /api/friends/mutual_friends/{user_id}/` — Get mutual friends with a specific user
+
+
 ### 🔹 Misc
 
 - `GET /api/schema/` — API schema definition
 - `GET /api/schema/swagger-ui/` — Interactive Swagger UI
 
+## 🔌 WebSocket Endpoints
+
+These WebSocket routes enable real-time functionality:
+
+1. **Chat Room WebSocket**  
+   - **Endpoint:** `ws/chat/<chatroom_id>/`
+   - **Description:** This endpoint allows users to join a specific chat room and receive real-time updates for new messages, typing indicators, and more.
+   - **Example:**
+     ```javascript
+     ws://localhost:8000/ws/chat/123/
+     ```
+
+2. **Notification WebSocket**  
+   - **Endpoint:** `ws/notifications/`
+   - **Description:** This WebSocket endpoint allows users to receive real-time notifications about various events (e.g., new messages, friend requests).
+   - **Example:**
+     ```javascript
+     ws://localhost:8000/ws/notifications/
+     ```
+
 ## 🚧 Coming Soon
 
 - [ ] Video/Voice calling via WebRTC
-- [ ] Realtime chat with Django Channels
 - [ ] Android and Web frontend
-- [ ] File/image sharing support
-- [ ] End-to-end encryption
-- [ ] Message search
-- [ ] Read receipts & typing indicators
 
 ## 🚀 Getting Started
 
