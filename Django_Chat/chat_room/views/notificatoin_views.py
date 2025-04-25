@@ -15,7 +15,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Notification.objects.filter(user=self.request.user).order_by('-timestamp')
     
     @action(detail=False, methods=['get'])
-    def unread(self):
+    def unread(self, request):
         unread_notifications = Notification.objects.filter(
             user = self.request.user,
             is_read = False
