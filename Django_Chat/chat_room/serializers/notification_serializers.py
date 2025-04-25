@@ -8,8 +8,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ['id', 'sender', 'message','room_name', 'timestamp', 'is_read', 'timestamp']
         
-    def get_sender(self, obj):
+    def get_sender(self, obj) -> str:
         return obj.message.sender.username
     
-    def get_room_name(self, obj):
+    def get_room_name(self, obj) -> str:
         return obj.message.room.name

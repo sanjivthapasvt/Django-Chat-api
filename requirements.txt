@@ -16,3 +16,5 @@ daphne
 channels
 channels_redis
 drf_nested_routers
+django-push-notifications
+firebase-admin

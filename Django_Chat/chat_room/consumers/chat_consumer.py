@@ -3,6 +3,7 @@ import json
 from channels.exceptions import DenyConnection
 from ..models import ChatRoom
 from channels.db import database_sync_to_async
+from ..models import Message, MessageReadStatus
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -52,6 +53,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     'username': self.user.username
                 }
             )
+        elif event_type =='read_message':
+            await self.handle_read_message(data)
 
     # Send 'typing' event to the group
     async def show_typing(self, event):
@@ -82,3 +85,35 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             "reader": event["reader"],
             "read_at": event["read_at"]
         })
+
+
+
+    async def handle_read_message(self, data):
+        message_id = data.get("message_id")
+        try:
+            message = await database_sync_to_async(Message.objects.select_related('room').get)(id=message_id)
+            
+            if message.sender_id == self.user.id:
+                return
+            
+            # Create read status
+            read_status, created = await database_sync_to_async(MessageReadStatus.objects.get_or_create)(
+                message=message, user=self.user
+            )
+
+            if created:
+                await self.channel_layer.group_send(
+                    f"chat_{message.room.id}",
+                    {
+                        "type": "message.read",
+                        "message_id": message.id,
+                        "reader": {
+                            "id": self.user.id,
+                            "username": self.user.username,
+                        },
+                        "read_at": read_status.timestamp.isoformat()
+                    }
+                )
+
+        except Message.DoesNotExist:
+            pass
