@@ -1,9 +1,15 @@
 from django.urls import path, include
-from .views import LoginView, RegisterView, LogoutView, UserProfileView
+from .views import LoginView, RegisterView, LogoutView, UserProfileView, FriendRequestViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'friend-requests', FriendRequestViewSet, basename='friendrequest')
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name="login"),
     path('register/', RegisterView.as_view(), name="register"),
     path('logout/', LogoutView.as_view(), name="logout"),
-    path('profile/', UserProfileView.as_view(), name="profile_update" )
+    path('profile/', UserProfileView.as_view(), name="profile_update" ),
+    #for friend request
+    path('', include(router.urls))
 ]
