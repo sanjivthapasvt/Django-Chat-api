@@ -1,7 +1,7 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 import json
 from channels.exceptions import DenyConnection
-from ..models import ChatRoom
+from ..models import ChatRoom, User
 from channels.db import database_sync_to_async
 from ..models import Message, MessageReadStatus
 
@@ -26,12 +26,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         
         # Add the user to the room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.set_online_status(True)
         await self.accept()
         
     async def disconnect(self, close_code):
         # Remove the user from the room group
+        await self.set_online_status(False)
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         
+    @database_sync_to_async
+    def set_online_status(self, status: bool):
+        user = User.objects.get(id=self.user.id)
+        user.online_status = status
+        user.save()
+          
     async def receive(self, text_data):
         data = json.loads(text_data)
         event_type = data.get("type")
