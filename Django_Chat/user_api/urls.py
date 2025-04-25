@@ -1,9 +1,10 @@
 from django.urls import path, include
-from .views import LoginView, RegisterView, LogoutView, UserProfileView, FriendRequestViewSet
+from .views import LoginView, RegisterView, LogoutView, UserProfileView, FriendRequestViewSet, FriendViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register(r'friend-requests', FriendRequestViewSet, basename='friendrequest')
+router.register(r'friend-requests', FriendRequestViewSet, basename='friend_requests')
+router.register(r'friends', FriendViewSet, basename='friends')
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name="login"),

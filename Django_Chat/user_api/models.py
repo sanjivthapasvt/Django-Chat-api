@@ -36,7 +36,7 @@ class FriendRequest(models.Model):
     def clean(self):
         if self.from_user == self.to_user:
             raise ValidationError("Cannot send friend request to yourself")
-        super.clean()
+        super().clean
         
     def save(self, *args, **kwargs):
         self.clean()
@@ -53,8 +53,8 @@ class FriendRequest(models.Model):
             raise ValidationError("Only pending requests can be accepted")
 
     def reject(self):
-            if self.status == 'pending':
-                self.status = 'rejected'
-                self.save()
-            else:
-                raise ValidationError("Only pending requests can be rejected")
+        if self.status == 'pending':
+            self.status = 'rejected'
+            self.save()
+        else:
+            raise ValidationError("Only pending requests can be rejected")

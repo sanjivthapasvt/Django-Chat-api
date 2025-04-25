@@ -3,28 +3,17 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.exceptions import ValidationError
-from ..models import FriendRequest, User
-from ..serializers import FriendRequestSerializer
 from django.db.models import Q
-from chat_room.models import ChatRoom
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from ..models import FriendRequest, User
+from ..serializers import FriendRequestSerializer, UserSerializer
+from chat_room.models import ChatRoom
 
 
-@extend_schema(
-    parameters=[
-        OpenApiParameter(
-            name='id',
-            description='ID',
-            required=True,
-            type=int,
-            location=OpenApiParameter.PATH
-        )
-    ]
-)
 class FriendRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = FriendRequestSerializer
-
+    queryset = FriendRequest.objects.all()
     def get_queryset(self):
         user = self.request.user
         return FriendRequest.objects.filter(Q(from_user=user) | Q(to_user=user))
@@ -49,7 +38,9 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 
         try:
             friend_request.accept()
-            chat_room = ChatRoom.objects.create(room_name=f"{request.user.username}_{friend_request.from_user.username}")
+            chat_room = ChatRoom.objects.create(
+                room_name=f"{request.user.username}_{friend_request.from_user.username}"
+            )
             chat_room.participants.set([request.user, friend_request.from_user])
             return Response({"detail": "Friend request accepted."}, status=status.HTTP_200_OK)
         except ValidationError as e:
@@ -80,6 +71,9 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         friend_request.delete()
         return Response({"detail": "Friend request cancelled."}, status=status.HTTP_200_OK)
 
+class FriendViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
     @action(detail=False, methods=['get'])
     def list_friends(self, request):
         search = request.query_params.get("search")
@@ -87,8 +81,8 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         if search:
             friends = friends.filter(username__icontains=search)
 
-        data = [{"id": f.id, "username": f.username} for f in friends]
-        return Response(data, status=status.HTTP_200_OK)
+        serialized_friends = UserSerializer(friends, many=True).data
+        return Response(serialized_friends, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path=r'mutual_friends/(?P<user_id>\d+)')
     def mutual_friends(self, request, user_id=None):
@@ -101,5 +95,5 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         other_user_friends = set(other_user.friends.all())
         mutual = user_friends & other_user_friends
 
-        data = [{"id": f.id, "username": f.username} for f in mutual]
-        return Response(data, status=status.HTTP_200_OK)
+        serialized_mutual = UserSerializer(mutual, many=True).data
+        return Response(serialized_mutual, status=status.HTTP_200_OK)
