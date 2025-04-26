@@ -107,12 +107,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 #for firebase cloud messaging
-# PUSH_NOTIFICATIONS_SETTINGS = {
-#     "FCM_API_KEY": os.getenv("FCM_API_KEY"),
-#     "FCM_APP_ID": os.getenv("FCM_APP_ID"),
-#     "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
-#     "FCM_POST_URL": os.getenv("FCM_POST_URL"),
-# }
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "FCM_API_KEY": os.getenv("FCM_API_KEY"),
+    "FCM_APP_ID": os.getenv("FCM_APP_ID"),
+    "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
+    "FCM_POST_URL": os.getenv("FCM_POST_URL"),
+}
 
 #end of custom change
 
