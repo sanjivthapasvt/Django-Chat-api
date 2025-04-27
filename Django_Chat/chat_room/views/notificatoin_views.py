@@ -5,12 +5,15 @@ from rest_framework.permissions import IsAuthenticated
 from ..permissions import IsRoomParticipant
 from ..models import Notification
 from ..serializers import NotificationSerializer
-
+from rest_framework.filters import OrderingFilter, SearchFilter
 class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
-    
+    filter_backends = (OrderingFilter, SearchFilter)
+    search_fields = ['notification_type']
+    odering_fields = ['timestamp']
+    ordering = ['-timestamp']
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user).order_by('-timestamp')
     

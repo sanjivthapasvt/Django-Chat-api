@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-        
+from rest_framework.filters import SearchFilter, OrderingFilter        
 #for drf_spectacular documentation
 @extend_schema(
     parameters=[
@@ -24,6 +24,10 @@ from asgiref.sync import async_to_sync
 class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Message.objects.all()
+    filter_backends=(SearchFilter, OrderingFilter)
+    search_fields = ['content','sender']
+    ordering_fields = ['timestamp']
+    ordering = ['-created_at']
     def get_serializer_class(self):
         if self.action == 'create':
             return MessageCreateSerializer

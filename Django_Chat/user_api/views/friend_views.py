@@ -4,11 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.exceptions import ValidationError
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema, OpenApiParameter
 from ..models import FriendRequest, User
 from ..serializers import FriendRequestSerializer, UserSerializer
 from chat_room.models import ChatRoom
-
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 class FriendRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -70,10 +69,12 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 
         friend_request.delete()
         return Response({"detail": "Friend request cancelled."}, status=status.HTTP_200_OK)
-
+    
+    
 class FriendViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
+
     @action(detail=False, methods=['get'])
     def list_friends(self, request):
         search = request.query_params.get("search")
@@ -81,7 +82,7 @@ class FriendViewSet(viewsets.ViewSet):
         if search:
             friends = friends.filter(username__icontains=search)
 
-        serialized_friends = UserSerializer(friends, many=True).data
+        serialized_friends = self.serializer_class(friends, many=True).data
         return Response(serialized_friends, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path=r'mutual_friends/(?P<user_id>\d+)')
@@ -91,9 +92,10 @@ class FriendViewSet(viewsets.ViewSet):
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        user_friends = set(request.user.friends.all())
-        other_user_friends = set(other_user.friends.all())
-        mutual = user_friends & other_user_friends
+        user_friend_ids = set(request.user.friends.values_list('id', flat=True))
+        other_friend_ids = set(other_user.friends.values_list('id', flat=True))
+        mutual_ids = user_friend_ids & other_friend_ids
 
-        serialized_mutual = UserSerializer(mutual, many=True).data
+        mutual = User.objects.filter(id__in=mutual_ids)
+        serialized_mutual = self.serializer_class(mutual, many=True).data
         return Response(serialized_mutual, status=status.HTTP_200_OK)

@@ -4,13 +4,19 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from ..models import ChatRoom, User
+from django.db.models import F
 from ..permissions import IsRoomAdmin, IsRoomParticipant
 from ..serializers import ChatRoomCreateSerializer, ChatRoomSerializer, AddMemberSerializer, RemoveMemberSerializer
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.filters import SearchFilter, OrderingFilter
 class ChatRoomViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = ChatRoom.objects.all()
+    queryset = ChatRoom.objects.all().order_by(F('last_message__timestamp').desc(nulls_last=True))
+    filter_backends = {SearchFilter, OrderingFilter}
+    search_fields = ['room_name', 'participants__username']
+    ordering_fields = ['room_name', 'last_message']
+    ordering = ['-last_message__timestamp']
     def get_queryset(self):
         return ChatRoom.objects.filter(participants=self.request.user)
 

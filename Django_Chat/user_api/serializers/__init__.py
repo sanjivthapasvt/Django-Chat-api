@@ -1,3 +1,3 @@
 from .auth_serializers import UserProfileUpdateSerializer,UserSerializer ,LogoutSerializer, UserLoginSerializer, UserRegisterSerializer
-from .friend_request_serializers import FriendRequestSerializer
+from .friend_views import FriendRequestSerializer
 
