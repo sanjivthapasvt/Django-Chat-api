@@ -22,7 +22,7 @@ A powerful, scalable chat backend built using **Django** and **Django REST Frame
 
 - **Messages**
   - Text messaging
-  - Search through messages (soon)
+  - Search through messages
   - Read/unread message tracking
   - Last message preview in room
 
