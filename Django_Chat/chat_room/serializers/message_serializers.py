@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Message, MessageReadStatus
+from ..models import ChatRoom, Message, MessageReadStatus
 from .user_serializers import BasicUserSerializer
 
 class MessageReadStatusSerializer(serializers.ModelSerializer):
@@ -31,8 +31,9 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessageCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ['room', 'content', 'image']
+        fields = ['id', 'content', 'image']
     
     def create(self, validated_data) -> Message:
-        sender = self.context['request'].user
-        return Message.objects.create(sender=sender, **validated_data)
+        validated_data['sender'] = self.context['request'].user
+        validated_data['room'] = ChatRoom.objects.get(pk=self.context['view'].kwargs['chatroom_pk'])
+        return super().create(validated_data)

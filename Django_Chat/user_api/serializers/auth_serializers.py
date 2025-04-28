@@ -19,7 +19,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'password', 'confirm_password']
+        fields = ['username', 'email', 'password', 'confirm_password']
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():

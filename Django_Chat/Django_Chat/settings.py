@@ -1,6 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 import os
+import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -11,12 +12,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(pc_n*$ae46^(v1!*ow#qz2wl--dxtv@wgnur(js$cy_1%$y1_'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+3
+4
+5
+6
+	
+# The secret key
+SECRET_KEY = os.environ.get("SECRET_KEY")
+ 
+DEBUG = bool(os.environ.get("DEBUG", default=0))
+ 
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
 
 
 # Application definition
@@ -95,7 +101,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("redis", 6379)],
         },
     },
 }
@@ -107,12 +113,12 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 #for firebase cloud messaging
-PUSH_NOTIFICATIONS_SETTINGS = {
-    "FCM_API_KEY": os.getenv("FCM_API_KEY"),
-    "FCM_APP_ID": os.getenv("FCM_APP_ID"),
-    "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
-    "FCM_POST_URL": os.getenv("FCM_POST_URL"),
-}
+# PUSH_NOTIFICATIONS_SETTINGS = {
+#     "FCM_API_KEY": os.getenv("FCM_API_KEY"),
+#     "FCM_APP_ID": os.getenv("FCM_APP_ID"),
+#     "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
+#     "FCM_POST_URL": os.getenv("FCM_POST_URL"),
+# }
 
 #end of custom change
 
@@ -139,12 +145,25 @@ WSGI_APPLICATION = 'Django_Chat.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
+# like this in .env for postgres
+#DATABASE_URL=postgresql://username:password@localhost:5432/dbname
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
+
 
 
 # Password validation

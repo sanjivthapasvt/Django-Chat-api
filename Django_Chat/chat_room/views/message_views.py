@@ -15,7 +15,6 @@ from rest_framework.filters import SearchFilter, OrderingFilter
         OpenApiParameter(
             name='chatroom_pk',
             description='ID of the chatroom',
-            required=True,
             type=int,
             location=OpenApiParameter.PATH
         )
@@ -27,7 +26,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     filter_backends=(SearchFilter, OrderingFilter)
     search_fields = ['content','sender']
     ordering_fields = ['timestamp']
-    ordering = ['-created_at']
+    ordering = ['-timestamp']
     def get_serializer_class(self):
         if self.action == 'create':
             return MessageCreateSerializer
