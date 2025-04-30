@@ -39,9 +39,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         chatroom_id = self.kwargs['chatroom_pk']
-        offset = int(self.request.GET.get('offset', 0))
-        limit = 25
-        return Message.objects.filter(room_id=chatroom_id).order_by('-timestamp')[offset:offset+limit]
+        return Message.objects.filter(room_id=chatroom_id).order_by('-timestamp')
 
     
     def perform_create(self, serializer):
