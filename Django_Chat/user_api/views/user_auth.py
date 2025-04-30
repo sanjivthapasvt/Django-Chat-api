@@ -9,10 +9,14 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
+    access_token = refresh.access_token
+    access_token['username'] = user.username
+    
     return {
         'refresh': str(refresh),
-        'access': str(refresh.access_token),
+        'access': str(access_token),
     }
+
 
 class RegisterView(GenericAPIView):
     serializer_class = UserRegisterSerializer

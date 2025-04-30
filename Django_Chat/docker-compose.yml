@@ -11,7 +11,7 @@ services:
   redis:
     image: redis:7.0
     ports:
-      - "6379:6380"
+      - "6380:6379"
 
   db:
     image: postgres:14

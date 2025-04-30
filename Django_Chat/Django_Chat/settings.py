@@ -7,15 +7,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-3
-4
-5
-6
 	
 # The secret key
 SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -87,6 +78,8 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'TOKEN_OBTAIN_PAIR_SERIALIZER': 'Django_Chat.serializers.CustomTokenObtainPairSerializer',
+
 }
 
 SPECTACULAR_SETTINGS = {
@@ -101,7 +94,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [("redis", 6379, 6380)],
         },
     },
 }
