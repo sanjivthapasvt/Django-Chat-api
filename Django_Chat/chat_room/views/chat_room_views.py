@@ -10,6 +10,7 @@ from ..serializers import ChatRoomCreateSerializer, ChatRoomSerializer, AddMembe
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter, OrderingFilter
+from ..pagination import ChatCursorPagination
 class ChatRoomViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = ChatRoom.objects.all().order_by(F('last_message__timestamp').desc(nulls_last=True))
@@ -17,6 +18,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
     search_fields = ['room_name', 'participants__username']
     ordering_fields = ['room_name', 'last_message']
     ordering = ['-last_message__timestamp']
+    pagination_class = ChatCursorPagination
     def get_queryset(self):
         return ChatRoom.objects.filter(participants=self.request.user)
 

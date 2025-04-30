@@ -8,7 +8,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from rest_framework.filters import SearchFilter, OrderingFilter        
+from rest_framework.filters import SearchFilter, OrderingFilter      
+from ..pagination import MessageCursorPagination  
 #for drf_spectacular documentation
 @extend_schema(
     parameters=[
@@ -27,6 +28,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     search_fields = ['content','sender']
     ordering_fields = ['timestamp', 'id']
     ordering = ['-timestamp', '-id']
+    pagination_class = MessageCursorPagination
     def get_serializer_class(self):
         if self.action == 'create':
             return MessageCreateSerializer

@@ -16,7 +16,7 @@ class ChatRoom(models.Model):
     
     class Meta:
         indexes = [
-            models.Index(fields=['is_group', 'created_at']),
+            models.Index(fields=['is_group', 'created_at', 'last_message']),
             models.Index(fields=['sharable_room_id']),
         ]
     
