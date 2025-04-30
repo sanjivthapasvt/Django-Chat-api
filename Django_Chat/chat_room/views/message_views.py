@@ -25,8 +25,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     filter_backends=(SearchFilter, OrderingFilter)
     search_fields = ['content','sender']
-    ordering_fields = ['timestamp']
-    ordering = ['-timestamp']
+    ordering_fields = ['timestamp', 'id']
+    ordering = ['-timestamp', '-id']
     def get_serializer_class(self):
         if self.action == 'create':
             return MessageCreateSerializer
