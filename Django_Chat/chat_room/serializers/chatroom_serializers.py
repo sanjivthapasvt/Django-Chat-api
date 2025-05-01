@@ -9,10 +9,13 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class ChatRoomSerializer(serializers.ModelSerializer):
+    # Nested serializers for related fields
     participants = BasicUserSerializer(many=True, read_only=True)
     admins = BasicUserSerializer(many=True, read_only=True)
     creator = BasicUserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
+
+    # Computed fields
     participants_count = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
     group_image_url = serializers.SerializerMethodField()
@@ -30,27 +33,31 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(int)
     def get_participants_count(self, obj) -> int:
+        # Return total number of participants
         return obj.participants.count()
 
     @extend_schema_field(bool)
     def get_is_admin(self, obj) -> bool:
+        # Check if current user is an admin in the room
         request = self.context.get('request')
         return request and request.user in obj.admins.all()
 
     @extend_schema_field(str)
     def get_room_type(self, obj) -> str:
+        # Return 'group' or 'private' based on room type
         return "group" if obj.is_group else "private"
 
     @extend_schema_field(Optional[str])
     def get_group_image_url(self, obj) -> Optional[str]:
+        # Return full URL for group image if it exists
         request = self.context.get('request')
         if obj.group_image:
             return request.build_absolute_uri(obj.group_image.url)
         return None
 
 
-
 class ChatRoomCreateSerializer(serializers.ModelSerializer):
+    # List of user IDs to add as participants
     participant_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
@@ -64,27 +71,33 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['creator']
 
     def create(self, validated_data):
+        # Handle creation of chat room with initial participants
         participant_ids = validated_data.pop('participant_ids', [])
         creator = self.context['request'].user
         validated_data.pop('creator', None)
 
         chat_room = ChatRoom.objects.create(creator=creator, **validated_data)
 
-        all_initial_participant_users = [creator] #creator
-        # Fetch users for the provided IDs
+        # Add creator and other users as participants
+        all_initial_participant_users = [creator]
         users_from_ids = User.objects.filter(id__in=participant_ids)
         all_initial_participant_users.extend(users_from_ids)
 
-        # add aLL initial participants in ONE ManyToMany operation
+        # Set participants in one call
         chat_room.participants.set(all_initial_participant_users)
 
         if chat_room.is_group:
-             chat_room.admins.add(creator) # Add creator as admin
+            # Set creator as admin if it's a group chat
+            chat_room.admins.add(creator)
 
         return chat_room
 
+
 class AddMemberSerializer(serializers.Serializer):
+    # List of user IDs to add to a group chat
     users = serializers.ListField(child=serializers.IntegerField(), help_text="Id of users to add to gc")
 
+
 class RemoveMemberSerializer(serializers.Serializer):
+    # ID of the user to remove from the group
     user_id = serializers.IntegerField(help_text="ID of the user to remove")

@@ -1,4 +1,4 @@
-from ..serializers import UserRegisterSerializer, UserLoginSerializer, LogoutSerializer, UserProfileUpdateSerializer
+from ..serializers import UserRegisterSerializer,UserSerializer, UserLoginSerializer, LogoutSerializer, UserProfileUpdateSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -65,9 +65,12 @@ class LogoutView(GenericAPIView):
     
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserProfileUpdateSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
     
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return UserSerializer
+        return UserProfileUpdateSerializer
     def get_object(self):
         return self.request.user

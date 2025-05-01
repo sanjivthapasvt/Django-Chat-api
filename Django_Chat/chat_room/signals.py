@@ -6,50 +6,55 @@ from .models import ChatRoom, Message, Notification
 import logging
 from django.db import transaction
 from django.db import IntegrityError
+
+# logger for error tracking
 logger = logging.getLogger(__name__)
 
 @receiver(m2m_changed, sender=ChatRoom.participants.through)
 def update_group_room_name(sender, instance, action, pk_set, **kwargs):
     """
-    Updates the group chat room_name automatically when participants are added,
-    if the room is a group and doesn't have a custom name set.
+    Updates group chat room name when participants are added, if it's a group and no custom name is set.
     """
-    # Only proceed if participants have been added, it's a group, and the name is not already set
+    # Check if participants were added, it's a group, and no custom name exists
     if action == 'post_add' and instance.is_group and not instance.room_name:
         try:
+            # Refresh instance to ensure latest data
             instance.refresh_from_db()
 
+            # Get all participants
             participants = instance.participants.all()
             if participants.exists():
+                # Use first 3 participants for name
                 participants_for_name = participants[:3]
                 participant_usernames = ', '.join(user.username for user in participants_for_name)
 
-                # Generate and set the new room name
+                # Set new room name
                 new_room_name = f"Group ({participant_usernames})"
                 instance.room_name = new_room_name
 
-                # Save the instance, updating only the room_name field
+                # Save only the room_name field
                 instance.save(update_fields=['room_name'])
 
         except Exception as e:
+            # Log any errors
             logger.error(f"Error updating group room name for room {instance.id}: {e}")
 
-
-#Signals for notficatoin
 @receiver(post_save, sender=Message)
 def create_message_notification(sender, instance, created, **kwargs):
+    """Creates notifications for new messages and sends them via WebSocket."""
+    # Only process new messages
     if not created:
         return
     
+    # Get chatroom and participants
     chatroom = instance.room
     participants = chatroom.participants.all()
 
-    notifications = []    
-
+    # Prepare notifications for each participant (except sender)
+    notifications = []
     for user in participants:
         if user == instance.sender:
             continue
-        
         notification = Notification(
             user=user,
             message=instance,
@@ -58,15 +63,18 @@ def create_message_notification(sender, instance, created, **kwargs):
         notifications.append(notification)
 
     try:
+        # Save notifications in a single transaction
         with transaction.atomic():
             Notification.objects.bulk_create(notifications)
     except Exception as e:
+        # Log any errors
         logger.error(f"Error creating notifications for message {instance.id}: {e}")
 
+    # Send notifications via WebSocket
     channel_layer = get_channel_layer()
     for notification in notifications:
         async_to_sync(channel_layer.group_send)(
-            f"notificatoin_{notification.user.id}",
+            f"notification_{notification.user.id}",
             {
                 "type": "send_notification",
                 "message": {
