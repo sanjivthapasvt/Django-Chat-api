@@ -11,6 +11,8 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter, OrderingFilter
 from ..pagination import ChatCursorPagination
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
     # Only authenticated users can access chat rooms
@@ -37,8 +39,19 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Set the creator when creating a room
-        serializer.save(creator=self.request.user)
-
+        chatroom = serializer.save(creator=self.request.user)
+        # Notify all connected sidebar clients
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "sidebar",
+            {
+                "type": "group.update",
+                "data": {
+                    "type": "group_created",
+                    "group": ChatRoomSerializer(chatroom, context=self.get_serializer_context()).data
+                }
+            }
+        )
     @extend_schema(
         request=AddMemberSerializer,
         responses={200: ChatRoomCreateSerializer}

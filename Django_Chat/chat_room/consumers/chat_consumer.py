@@ -125,3 +125,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         except Message.DoesNotExist:
             pass
+
+#consumer for sidebar chat where it displays group names and stufff
+class SideBarConsumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope['user']
+        if not self.user or not self.user.is_authenticated:
+            raise DenyConnection("User is not authenticated")
+        
+        await self.channel_layer.group_add("sidebar", self.channel_name)
+        await self.accept()
+        
+    async def disconnect(self, code):
+        await self.channel_layer.group_discard("sidebar", self.channel_name)
+        
+    async def group_update(self, event):
+        await self.send_json(event["data"])

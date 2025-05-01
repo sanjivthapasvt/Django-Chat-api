@@ -53,11 +53,31 @@ class MessageViewSet(viewsets.ModelViewSet):
         # Save message and send it via WebSocket
         message = serializer.save()
         channel_layer = get_channel_layer()
+
+        # Notify room for message
         async_to_sync(channel_layer.group_send)(
             f"chat_{message.room.id}",
             {
                 "type": "chat.message",
                 "message": MessageSerializer(message).data
+            }
+        )
+
+        # Notify sidebar to update last message preview
+        async_to_sync(channel_layer.group_send)(
+            "sidebar",
+            {
+                "type": "group.update",
+                "data": {
+                    "type": "group_message_updated",
+                    "group_id": message.room.id,
+                    "last_message": {
+                        "id": message.id,
+                        "text": message.content,
+                        "sender": message.sender.username,
+                        "timestamp": message.timestamp.isoformat()
+                    }
+                }
             }
         )
 
