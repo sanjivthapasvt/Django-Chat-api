@@ -3,21 +3,22 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+
 load_dotenv()
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-	
-# The secret key
+# Secret key for cryptographic signing
 SECRET_KEY = os.environ.get("SECRET_KEY")
- 
+
+# Debug mode toggle
 DEBUG = bool(os.environ.get("DEBUG", default=0))
- 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
 
+# Hosts allowed to access the app
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
-# Application definition
-
+# Installed apps including Django, third-party, and custom apps
 INSTALLED_APPS = [
     'daphne',
     'django.contrib.admin',
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'push_notifications',
 ]
 
+# Middleware stack for request/response processing
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
@@ -49,16 +51,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-#Custom changes
+# Custom user model
+AUTH_USER_MODEL = "user_api.User"
 
-AUTH_USER_MODEL = "user_api.User" #custom user
-
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
-    'user_api.backends.UsernameOrEmailBackend',  # Custom backend
-    'django.contrib.auth.backends.ModelBackend', # Django's default as fallback
+    'user_api.backends.UsernameOrEmailBackend',  # Custom backend for email or username login
+    'django.contrib.auth.backends.ModelBackend', # Default Django backend
 ]
 
-
+# Django REST framework configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -69,10 +71,9 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-
 }
 
-
+# JWT settings for token-based authentication
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1200),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=10),
@@ -80,17 +81,17 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'TOKEN_OBTAIN_PAIR_SERIALIZER': 'Django_Chat.serializers.CustomTokenObtainPairSerializer',
-
 }
 
+# OpenAPI schema generation settings
 SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True
 }
 
-
+# ASGI application for asynchronous support (channels)
 ASGI_APPLICATION = "Django_Chat.asgi.application"
 
-#channel
+# Channel layers configuration for WebSocket support using Redis
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -100,24 +101,14 @@ CHANNEL_LAYERS = {
     },
 }
 
+# CORS settings for cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
-
-
 CORS_ALLOW_ALL_ORIGINS = True
 
-
-#for firebase cloud messaging
-# PUSH_NOTIFICATIONS_SETTINGS = {
-#     "FCM_API_KEY": os.getenv("FCM_API_KEY"),
-#     "FCM_APP_ID": os.getenv("FCM_APP_ID"),
-#     "FCM_SERVER_KEY": os.getenv("FCM_SERVER_KEY"),
-#     "FCM_POST_URL": os.getenv("FCM_POST_URL"),
-# }
-
-#end of custom change
-
+# URL routing configuration
 ROOT_URLCONF = 'Django_Chat.urls'
 
+# Template rendering configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -133,23 +124,10 @@ TEMPLATES = [
     },
 ]
 
+# WSGI application (used only if running traditional synchronous servers)
 WSGI_APPLICATION = 'Django_Chat.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
-# like this in .env for postgres
-#DATABASE_URL=postgresql://username:password@localhost:5432/dbname
-
+# PostgreSQL database configuration using environment variable
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv('DATABASE_URL'),
@@ -158,45 +136,22 @@ DATABASES = {
     )
 }
 
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# Password validation rules
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# Localization settings
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# Static files configuration
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
+# Default auto field type for primary keys
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
