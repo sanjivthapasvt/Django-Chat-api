@@ -1,5 +1,5 @@
 from django.urls import re_path
-from .consumers import ChatConsumer, NotificationConsumer
+from .consumers import ChatConsumer, NotificationConsumer, SideBarConsumer
 
 # Routes for WebSocket connections
 websocket_urlpatterns = [
@@ -8,4 +8,7 @@ websocket_urlpatterns = [
     
     # Route for user notifications
     re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
+    
+    # Route for sidebar
+    re_path(r'ws/sidebar/$', SideBarConsumer.as_asgi()),
 ]

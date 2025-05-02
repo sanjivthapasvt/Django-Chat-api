@@ -1,2 +1,2 @@
-from .chat_consumer import ChatConsumer
+from .chat_consumer import ChatConsumer, SideBarConsumer
 from .notification_consumer import NotificationConsumer

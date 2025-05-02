@@ -69,7 +69,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             {
                 "type": "group.update",
                 "data": {
-                    "type": "group_message_updated",
+                    "type": "last_message_updated",
                     "group_id": message.room.id,
                     "last_message": {
                         "id": message.id,
