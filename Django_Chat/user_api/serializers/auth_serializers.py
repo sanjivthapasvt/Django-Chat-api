@@ -89,10 +89,10 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(write_only=True, required=False)
     new_password = serializers.CharField(write_only=True, required=False)
     confirm_password = serializers.CharField(write_only=True, required=False)
-    
+    bio = serializers.CharField()
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "profile_pic", "old_password", "new_password", "confirm_password"]
+        fields = ["first_name", 'bio', "last_name", "email", "profile_pic", "old_password", "new_password", "confirm_password"]
     def validate(self, data):
             # Check if any password field is provided
             if any(field in data for field in ['old_password', 'new_password', 'confirm_password']):

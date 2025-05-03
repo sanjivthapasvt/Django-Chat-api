@@ -73,7 +73,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
 class FriendViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
-
+    
     @action(detail=False, methods=['get'])
     def list_friends(self, request):
         search = request.query_params.get("search")
@@ -98,3 +98,4 @@ class FriendViewSet(viewsets.ViewSet):
         mutual = User.objects.filter(id__in=mutual_ids)
         serialized_mutual = self.serializer_class(mutual, many=True).data
         return Response(serialized_mutual, status=status.HTTP_200_OK)
+    
