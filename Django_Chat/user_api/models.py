@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-
+from django.utils import timezone
 def user_profile_pic_path(instance, filename):
     return f'media/profile_pic/user_{instance.id}/{filename}'
 
@@ -11,7 +11,7 @@ class User(AbstractUser):
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
     REQUIRED_FIELDS = ["email", "first_name", "last_name"]
     USERNAME_FIELD = "username"
-    
+    last_seen = models.DateTimeField(default=timezone.now)
     def __str__(self):
         return self.username
     

@@ -127,17 +127,32 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             pass
 
 #consumer for sidebar chat where it displays group names and stufff
+from django.utils import timezone
 class SideBarConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope['user']
-        if not self.user or not self.user.is_authenticated:
+        user = self.scope['user']
+        if not user or not user.is_authenticated:
             raise DenyConnection("User is not authenticated")
         
         await self.channel_layer.group_add("sidebar", self.channel_name)
+        await self.set_user_online(user)
         await self.accept()
         
     async def disconnect(self, code):
+        user = self.scope['user']
+        await self.set_user_offline(user)
         await self.channel_layer.group_discard("sidebar", self.channel_name)
         
     async def group_update(self, event):
         await self.send_json(event["data"])
+        
+    @database_sync_to_async
+    def set_user_online(self,user):
+        user.online_status = True
+        user.save()
+        
+    @database_sync_to_async
+    def set_user_offline(self, user):
+        user.online_status = False
+        user.last_seen = timezone.now()
+        user.save()
