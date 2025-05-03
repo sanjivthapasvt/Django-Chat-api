@@ -153,7 +153,7 @@ class SideBarConsumer(AsyncJsonWebsocketConsumer):
     
     async def set_user_online(self, user_id):
         conn = get_redis_connection("default")
-        conn.set(f"user:{user_id}:online", "1", ex=300)
+        conn.set(f"user:{user_id}:online", "1")
 
     async def set_user_offline(self, user_id):
         await self.update_last_seen(user_id)
