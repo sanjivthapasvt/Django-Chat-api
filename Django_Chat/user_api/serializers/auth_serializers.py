@@ -16,12 +16,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name','friends', 'profile_pic','online_status', 'last_seen']
         read_only_fields = ['id', 'username', 'email']
     
-    def get_online_status(self, obj):
+    def get_online_status(self, obj) -> bool:
         conn = get_redis_connection("default")
         return conn.get(f"user:{obj.id}:online") == b"1"
     
 
-    def get_last_seen(self, obj):
+    def get_last_seen(self, obj) -> str:
         conn = get_redis_connection("default")
         last_seen = conn.get(f"user:{obj.id}:last_seen")
         if last_seen:

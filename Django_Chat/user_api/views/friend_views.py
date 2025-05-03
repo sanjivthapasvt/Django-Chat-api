@@ -7,7 +7,6 @@ from django.db.models import Q
 from ..models import FriendRequest, User
 from ..serializers import FriendRequestSerializer, UserSerializer
 from chat_room.models import ChatRoom
-from rest_framework.filters import SearchFilter, OrderingFilter
 
 class FriendRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -28,7 +27,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
             )
         return None
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['POST'])
     def accept(self, request, pk=None):
         friend_request = self.get_object()
         permission_error = self._validate_request_target(request, friend_request)
@@ -45,7 +44,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['POST'])
     def reject(self, request, pk=None):
         friend_request = self.get_object()
         permission_error = self._validate_request_target(request, friend_request)
@@ -58,7 +57,7 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['POST'])
     def cancel(self, request, pk=None):
         friend_request = self.get_object()
         if friend_request.from_user != request.user:
