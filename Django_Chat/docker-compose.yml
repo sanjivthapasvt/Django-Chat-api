@@ -7,11 +7,12 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      - redis
       - db
   redis:
     image: redis:7.0
     ports:
-      - "6380:6379"
+      - "6379:6379"
 
   db:
     image: postgres:14

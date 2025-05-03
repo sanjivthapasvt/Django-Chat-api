@@ -4,6 +4,10 @@ from channels.exceptions import DenyConnection
 from ..models import ChatRoom, User
 from channels.db import database_sync_to_async
 from ..models import Message, MessageReadStatus
+from django.core.cache import cache
+from django_redis import get_redis_connection
+from django.utils import timezone
+
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -135,24 +139,23 @@ class SideBarConsumer(AsyncJsonWebsocketConsumer):
             raise DenyConnection("User is not authenticated")
         
         await self.channel_layer.group_add("sidebar", self.channel_name)
-        await self.set_user_online(user)
+        await self.set_user_online(user.id)
         await self.accept()
         
     async def disconnect(self, code):
         user = self.scope['user']
-        await self.set_user_offline(user)
         await self.channel_layer.group_discard("sidebar", self.channel_name)
+        await self.set_user_offline(user.id)
         
     async def group_update(self, event):
         await self.send_json(event["data"])
         
-    @database_sync_to_async
-    def set_user_online(self,user):
-        user.online_status = True
-        user.save()
-        
-    @database_sync_to_async
-    def set_user_offline(self, user):
-        user.online_status = False
-        user.last_seen = timezone.now()
-        user.save()
+    
+    async def set_user_online(self, user_id):
+        conn = get_redis_connection("default")
+        conn.set(f"user:{user_id}:online", "1", ex=300)
+
+    async def set_user_offline(self, user_id):
+        conn = get_redis_connection("default")
+        conn.set(f"user:{user_id}:online", "0")
+        conn.set(f"user:{user_id}:last_seen", timezone.now().isoformat())

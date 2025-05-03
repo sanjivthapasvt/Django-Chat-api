@@ -2,11 +2,12 @@ from ..models import User
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
-
+from django.core.cache import cache
+from django_redis import get_redis_connection
 
 class UserSerializer(serializers.ModelSerializer):
-    online_status = serializers.BooleanField()
-    last_seen = serializers.DateTimeField()
+    online_status = serializers.SerializerMethodField()
+    last_seen = serializers.SerializerMethodField()
     friends = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
@@ -14,6 +15,19 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name','friends', 'profile_pic','online_status', 'last_seen']
         read_only_fields = ['id', 'username', 'email']
+    
+    def get_online_status(self, obj):
+        conn = get_redis_connection("default")
+        return conn.get(f"user:{obj.id}:online") == b"1"
+    
+
+    def get_last_seen(self, obj):
+        conn = get_redis_connection("default")
+        last_seen = conn.get(f"user:{obj.id}:last_seen")
+        if last_seen:
+            import datetime
+            return datetime.datetime.fromisoformat(last_seen.decode())
+        return None
         
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

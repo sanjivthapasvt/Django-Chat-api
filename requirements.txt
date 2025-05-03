@@ -22,6 +22,7 @@ django-cors-headers==4.7.0
 django-jsonform==2.23.2
 django-model-utils==5.0.0
 django-push-notifications==3.2.1
+django-redis==5.4.0
 django-rest-framework==0.1.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
@@ -95,4 +96,3 @@ uvicorn==0.34.2
 whitenoise==6.9.0
 yarl==1.20.0
 zope.interface==7.2
-django_redis

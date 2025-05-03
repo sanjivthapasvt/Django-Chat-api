@@ -101,6 +101,17 @@ CHANNEL_LAYERS = {
     },
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://redis:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+
 # CORS settings for cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
@@ -155,3 +166,5 @@ STATIC_URL = 'static/'
 
 # Default auto field type for primary keys
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
