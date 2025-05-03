@@ -8,12 +8,13 @@ from django_redis import get_redis_connection
 class UserSerializer(serializers.ModelSerializer):
     online_status = serializers.SerializerMethodField()
     last_seen = serializers.SerializerMethodField()
+    bio = serializers.CharField()
     friends = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','friends', 'profile_pic','online_status', 'last_seen']
+        fields = ['id', 'username','bio', 'email', 'first_name', 'last_name','friends', 'profile_pic','online_status', 'last_seen']
         read_only_fields = ['id', 'username', 'email']
     
     def get_online_status(self, obj) -> bool:
