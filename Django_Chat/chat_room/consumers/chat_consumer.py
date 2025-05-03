@@ -156,6 +156,11 @@ class SideBarConsumer(AsyncJsonWebsocketConsumer):
         conn.set(f"user:{user_id}:online", "1", ex=300)
 
     async def set_user_offline(self, user_id):
+        await self.update_last_seen(user_id)
         conn = get_redis_connection("default")
         conn.set(f"user:{user_id}:online", "0")
         conn.set(f"user:{user_id}:last_seen", timezone.now().isoformat())
+        
+    @database_sync_to_async
+    def update_last_seen(self, user_id):
+        User.objects.filter(id=user_id).update(last_seen=timezone.now().isoformat())
