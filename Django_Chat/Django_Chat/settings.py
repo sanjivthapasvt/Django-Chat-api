@@ -116,6 +116,7 @@ CACHES = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 
+
 # URL routing configuration
 ROOT_URLCONF = 'Django_Chat.urls'
 
