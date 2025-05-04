@@ -1,4 +1,4 @@
-from ..models import User
+from ..models import User, FriendRequest
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
@@ -131,6 +131,36 @@ class ListUserSerializer(serializers.ModelSerializer):
     friends = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    friendship_status = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username','bio', 'email', 'first_name', 'last_name','friends', 'profile_pic']
+        fields = ['id', 'username','bio', 'email', 'first_name', 'last_name','friends', 'profile_pic', 'friendship_status']
+    
+    def get_friendship_status(self, other_user):
+        request_user = self.context['request'].user
+        
+        #if both are same user return none
+        if request_user == other_user:
+            return None
+        
+        try:
+            fr = FriendRequest.objects.get(from_user=request_user, to_user=other_user)
+            if fr.status == 'pending':
+                return 'request_sent'
+            elif fr.status == 'accepted':
+                return 'friends'
+        
+        except FriendRequest.DoesNotExist:
+            pass
+        
+        try:
+            fr = FriendRequest.objects.get(from_user=other_user, to_user=request_user)
+            if fr.status == 'pending':
+                return 'request_received'
+            elif fr.status == 'accepted':
+                return 'friends'
+        
+        except FriendRequest.DoesNotExist:
+            pass
+        
+        return None
