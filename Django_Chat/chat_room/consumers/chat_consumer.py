@@ -4,10 +4,10 @@ from channels.exceptions import DenyConnection
 from ..models import ChatRoom, User
 from channels.db import database_sync_to_async
 from ..models import Message, MessageReadStatus
-from django.core.cache import cache
 from django_redis import get_redis_connection
 from django.utils import timezone
-
+from django.utils import timezone
+from asgiref.sync import sync_to_async
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -131,7 +131,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             pass
 
 #consumer for sidebar chat where it displays group names and stufff
-from django.utils import timezone
+
 class SideBarConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         user = self.scope['user']
@@ -144,8 +144,9 @@ class SideBarConsumer(AsyncJsonWebsocketConsumer):
         
     async def disconnect(self, code):
         user = self.scope['user']
+        if user and user.is_authenticated:
+            await self.set_user_offline(user.id)
         await self.channel_layer.group_discard("sidebar", self.channel_name)
-        await self.set_user_offline(user.id)
         
     async def group_update(self, event):
         await self.send_json(event["data"])
@@ -156,11 +157,12 @@ class SideBarConsumer(AsyncJsonWebsocketConsumer):
         conn.set(f"user:{user_id}:online", "1")
 
     async def set_user_offline(self, user_id):
-        await self.update_last_seen(user_id)
         conn = get_redis_connection("default")
-        conn.set(f"user:{user_id}:online", "0")
-        conn.set(f"user:{user_id}:last_seen", timezone.now().isoformat())
+        current_time=timezone.now().isoformat()
+        await sync_to_async(conn.set)(f"user:{user_id}:online", "0")
+        await sync_to_async(conn.set)(f"user:{user_id}:last_seen", current_time)
+        await self.update_last_seen(user_id, current_time)
         
     @database_sync_to_async
-    def update_last_seen(self, user_id):
-        User.objects.filter(id=user_id).update(last_seen=timezone.now().isoformat())
+    def update_last_seen(self, user_id, timestamp):
+        User.objects.filter(id=user_id).update(last_seen=timestamp)
