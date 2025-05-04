@@ -132,9 +132,15 @@ class ListUserSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     friendship_status = serializers.SerializerMethodField()
+    outgoing_request_id = serializers.SerializerMethodField()
+    incoming_request_id = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username','bio', 'email', 'first_name', 'last_name','friends', 'profile_pic', 'friendship_status']
+        fields = ['id', 'username','bio', 'email',
+                  'first_name', 'last_name','friends',
+                  'profile_pic', 'friendship_status','outgoing_request_id',
+                  'incoming_request_id'
+        ]
     
     def get_friendship_status(self, other_user):
         request_user = self.context['request'].user
@@ -164,3 +170,13 @@ class ListUserSerializer(serializers.ModelSerializer):
             pass
         
         return None
+
+    def get_outgoing_request_id(self, user):
+        me = self.context["request"].user
+        fr = FriendRequest.objects.filter(from_user=me, to_user=user).first()
+        return fr.id if fr else None
+
+    def get_incoming_request_id(self, user):
+        me = self.context["request"].user
+        fr = FriendRequest.objects.filter(from_user=user, to_user=me).first()
+        return fr.id if fr else None
