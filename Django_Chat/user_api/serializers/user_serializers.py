@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.core.cache import cache
 from django_redis import get_redis_connection
 
+
 class UserSerializer(serializers.ModelSerializer):
     online_status = serializers.SerializerMethodField()
     last_seen = serializers.SerializerMethodField()
@@ -124,3 +125,12 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+    
+class ListUserSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField()
+    friends = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
+    class Meta:
+        model = User
+        fields = ['id', 'username','bio', 'email', 'first_name', 'last_name','friends', 'profile_pic']
