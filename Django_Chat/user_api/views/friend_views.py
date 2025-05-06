@@ -207,6 +207,20 @@ class FriendViewSet(viewsets.ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
+    def retrieve(self, request, pk=None):
+        try:
+            friend = request.user.friends.filter(pk=pk).first()
+            if not friend:
+                return Response({"error": "Friend not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            serialized_friend = self.serializer_class(friend).data
+            return Response(serialized_friend, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
     @action(detail=True, methods=['post'])
     def remove_friend(self, request, pk=None):
         try:
@@ -227,7 +241,14 @@ class FriendViewSet(viewsets.ViewSet):
         with transaction.atomic():
             request.user.friends.remove(friend)
             friend.friends.remove(request.user)
-            
+        #to delete the relation with friend
+        FriendRequest.objects.filter(
+            from_user=request.user, to_user=friend, status='accepted'
+        ).delete()
+
+        FriendRequest.objects.filter(
+            from_user=friend, to_user=request.user, status='accepted'
+        ).delete()
         return Response(
             {"detail": f"Successfully removed {friend.username} from your friends list."},
             status=status.HTTP_200_OK

@@ -9,17 +9,16 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class ChatRoomSerializer(serializers.ModelSerializer):
-    # Nested serializers for related fields
     participants = BasicUserSerializer(many=True, read_only=True)
     admins = BasicUserSerializer(many=True, read_only=True)
     creator = BasicUserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
 
-    # Computed fields
     participants_count = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
     group_image_url = serializers.SerializerMethodField()
     room_type = serializers.SerializerMethodField()
+    chat_name = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatRoom
@@ -27,7 +26,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             'id', 'room_name', 'is_group', 'created_at', 'creator',
             'participants', 'admins', 'participants_count',
             'sharable_room_id', 'last_message', 'group_image',
-            'is_admin', 'room_type', 'group_image_url'
+            'is_admin', 'room_type', 'group_image_url', 'chat_name'
         ]
         read_only_fields = ['creator', 'sharable_room_id', 'created_at']
 
@@ -54,6 +53,14 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         if obj.group_image:
             return request.build_absolute_uri(obj.group_image.url)
         return None
+    
+    def get_chat_name(self, obj):
+        user = self.context['request'].user
+        if obj.is_group:
+            return obj.room_name or 'Nameless Group'
+        
+        other_participant = obj.participants.exclude(id=user.id).first()
+        return other_participant.username if other_participant else "Anoynomos"
 
 
 class ChatRoomCreateSerializer(serializers.ModelSerializer):
