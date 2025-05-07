@@ -1,3 +1,3 @@
 from .user_serializers import UserProfileUpdateSerializer,ListUserSerializer ,UserSerializer ,LogoutSerializer, UserLoginSerializer, UserRegisterSerializer
 from .friend_serializers import FriendRequestSerializer
-from .cutom_token_serializers import CustomTokenRefreshSerializer
+from .cutom_token_serializers import MyTokenRefreshSerializer

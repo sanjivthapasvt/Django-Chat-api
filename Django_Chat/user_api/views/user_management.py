@@ -17,7 +17,7 @@ def get_tokens_for_user(user):
         'refresh': str(refresh),
         'access': str(access_token),
     }
-
+    
 
 class RegisterView(GenericAPIView):
     serializer_class = UserRegisterSerializer
