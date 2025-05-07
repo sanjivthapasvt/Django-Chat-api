@@ -26,8 +26,8 @@ class BasicMessageSerializer(serializers.ModelSerializer):
 
 # serializer for retrieving message details including read status
 class MessageSerializer(serializers.ModelSerializer):
-    sender = BasicUserSerializer(read_only=True)  # Include nested sender details
-    read_statuses = MessageReadStatusSerializer(many=True, read_only=True)  # Who has read this message
+    sender = BasicUserSerializer(read_only=True)
+    read_statuses = MessageReadStatusSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Message

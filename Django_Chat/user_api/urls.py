@@ -1,12 +1,17 @@
 from django.urls import path, include
 from .views import LoginView, RegisterView, LogoutView, UserProfileView, FriendRequestViewSet, FriendViewSet,ListUserViewSet
 from rest_framework.routers import DefaultRouter
+from .serializers import CustomTokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 router = DefaultRouter()
 router.register(r'friend-requests', FriendRequestViewSet, basename='friend_requests')
 router.register(r'friends', FriendViewSet, basename='friends')
 router.register(r'users', ListUserViewSet, basename='users')
 
+#for jwt to send username when getting access token with refresh tiken
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
+    
 urlpatterns = [
     path('login/', LoginView.as_view(), name="login"),
     path('register/', RegisterView.as_view(), name="register"),
@@ -14,7 +19,7 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name="profile_update" ),
     
     #for jwt 
-    path('token/refresh/', TokenRefreshView.as_view(),name='token_refresh'),
+    path('token/refresh/', CustomTokenRefreshView.as_view(),name='token_refresh'),
     
     #for friend request
     path('', include(router.urls))

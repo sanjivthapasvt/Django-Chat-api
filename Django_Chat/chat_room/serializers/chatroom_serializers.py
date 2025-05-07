@@ -1,19 +1,17 @@
 from rest_framework import serializers
 from typing import Optional
 from drf_spectacular.utils import extend_schema_field
-from .user_serializers import BasicUserSerializer
 from ..models import ChatRoom
 from .message_serializers import BasicMessageSerializer
 from django.contrib.auth import get_user_model
-
+from user_api.serializers import UserSerializer
 User = get_user_model()
 
 class ChatRoomSerializer(serializers.ModelSerializer):
-    participants = BasicUserSerializer(many=True, read_only=True)
-    admins = BasicUserSerializer(many=True, read_only=True)
-    creator = BasicUserSerializer(read_only=True)
+    participants = UserSerializer(many=True, read_only=True)
+    admins = UserSerializer(many=True, read_only=True)
+    creator = UserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
-
     participants_count = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
     group_image_url = serializers.SerializerMethodField()
