@@ -48,7 +48,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
                 "type": "group.update",
                 "data": {
                     "type": "group_created",
-                    "group": ChatRoomSerializer(chatroom, context=self.get_serializer_context()).data
+                    "group": ChatRoomCreateSerializer(chatroom, context=self.get_serializer_context()).data
                 }
             }
         )

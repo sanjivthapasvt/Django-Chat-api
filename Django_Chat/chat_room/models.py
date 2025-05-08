@@ -31,12 +31,10 @@ class ChatRoom(models.Model):
         return f"{'Group' if self.is_group else 'Private'} Chat ({', '.join(user.username for user in participants)})"
 
     def clean(self):
-        """Model-level validation"""
         if self.is_group and self.participants.count() > 50:
             raise ValidationError("A group cannot have more than 50 members.")
 
     def add_participant(self, user, is_admin=False):
-        """Adds a participant to the room"""
         if self.is_group and self.participants.count() >= 50:
             raise ValueError("Group cannot have more than 50 members.")
         self.participants.add(user)
@@ -54,10 +52,7 @@ class ChatRoom(models.Model):
         self.save(update_fields=['last_message'])
 
     def convert_to_group(self, creator_user):
-        """
-        Converts a private chat to group chat
-        by cloning participants and metadata.
-        """
+        #Converts a private chat to group chat
         if not self.is_group:
             group_chat = ChatRoom.objects.create(
                 is_group=True,
