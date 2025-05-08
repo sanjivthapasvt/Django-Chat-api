@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     'django_jsonform',
     'chat_room.apps.ChatRoomConfig',
     'channels',
-    'push_notifications',
 ]
 
 # Middleware stack for request/response processing
