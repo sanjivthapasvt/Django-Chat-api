@@ -54,7 +54,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     
     def get_chat_name(self, obj):
         user = self.context['request'].user
-        if obj.is_group:
+        if obj.is_group or obj.room_name:
             return obj.room_name or 'Nameless Group'
         
         other_participant = obj.participants.exclude(id=user.id).first()
@@ -62,40 +62,43 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 
 
 class ChatRoomCreateSerializer(serializers.ModelSerializer):
-    # List of user IDs to add as participants
     participant_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
-        required=False,
+        required=True,
         help_text="List of user IDs to add as participants (excluding the creator)"
     )
 
     class Meta:
         model = ChatRoom
-        fields = ['room_name', 'is_group', 'participant_ids', 'group_image']
-        read_only_fields = ['creator']
+        fields = ['room_name', 'group_image', 'participant_ids']
+
+    def validate(self, data):
+        if len(data['participant_ids']) + 1 > 50:
+            raise serializers.ValidationError("A group cannot have more than 50 members.")
+        return data
 
     def create(self, validated_data):
-        # Handle creation of chat room with initial participants
         participant_ids = validated_data.pop('participant_ids', [])
         creator = self.context['request'].user
-        validated_data.pop('creator', None)
+        total_participants = len(participant_ids) + 1
 
-        chat_room = ChatRoom.objects.create(creator=creator, **validated_data)
+        validated_data['creator'] = creator
+        validated_data['is_group'] = total_participants > 2
 
-        # Add creator and other users as participants
-        all_initial_participant_users = [creator]
-        users_from_ids = User.objects.filter(id__in=participant_ids)
-        all_initial_participant_users.extend(users_from_ids)
+        if validated_data['is_group'] and not validated_data.get('room_name'):
+            raise serializers.ValidationError({"room_name": "Group chats must have a name."})
 
-        # Set participants in one call
-        chat_room.participants.set(all_initial_participant_users)
+        chat_room = ChatRoom.objects.create(**validated_data)
+
+        users = [creator] + list(User.objects.filter(id__in=participant_ids))
+        chat_room.participants.set(users)
 
         if chat_room.is_group:
-            # Set creator as admin if it's a group chat
             chat_room.admins.add(creator)
 
         return chat_room
+
 
 
 class AddMemberSerializer(serializers.Serializer):

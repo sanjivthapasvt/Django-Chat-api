@@ -13,6 +13,9 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from ..pagination import ChatCursorPagination
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import json
+from django.core.serializers.json import DjangoJSONEncoder
+
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
     # Only authenticated users can access chat rooms
@@ -40,6 +43,10 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set the creator when creating a room
         chatroom = serializer.save(creator=self.request.user)
+        serialized_data = ChatRoomSerializer(chatroom, context=self.get_serializer_context()).data
+        
+        json_data = json.dumps(serialized_data, cls=DjangoJSONEncoder)
+        safe_data = json.loads(json_data)
         # Notify all connected sidebar clients
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -48,7 +55,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
                 "type": "group.update",
                 "data": {
                     "type": "group_created",
-                    "group": ChatRoomCreateSerializer(chatroom, context=self.get_serializer_context()).data
+                    "group": safe_data
                 }
             }
         )

@@ -26,13 +26,19 @@ class ChatRoom(models.Model):
     def __str__(self):
         if self.is_group and self.room_name:
             return self.room_name
-        # Return names of up to 3 participants for private chats
         participants = self.participants.all()[:3]
         return f"{'Group' if self.is_group else 'Private'} Chat ({', '.join(user.username for user in participants)})"
 
     def clean(self):
         if self.is_group and self.participants.count() > 50:
             raise ValidationError("A group cannot have more than 50 members.")
+
+    def save(self, *args, **kwargs):
+        # Optional safety: auto-set is_group if > 2 participants after save
+        super().save(*args, **kwargs)
+        if self.pk and self.participants.count() > 2 and not self.is_group:
+            self.is_group = True
+            super().save(update_fields=["is_group"])
 
     def add_participant(self, user, is_admin=False):
         if self.is_group and self.participants.count() >= 50:
@@ -42,17 +48,14 @@ class ChatRoom(models.Model):
             self.admins.add(user)
 
     def remove_participant(self, user):
-        """Removes a participant and admin status (if any)"""
         self.participants.remove(user)
         self.admins.remove(user)
 
     def update_last_message(self, message):
-        """Updates the latest message in the room"""
         self.last_message = message
         self.save(update_fields=['last_message'])
 
     def convert_to_group(self, creator_user):
-        #Converts a private chat to group chat
         if not self.is_group:
             group_chat = ChatRoom.objects.create(
                 is_group=True,
@@ -68,7 +71,6 @@ class ChatRoom(models.Model):
 
     @classmethod
     def get_or_create_private_chat(cls, user1, user2):
-        """Returns existing private chat between two users or creates a new one"""
         existing_rooms = cls.objects.filter(
             is_group=False,
             participants=user1
@@ -84,7 +86,6 @@ class ChatRoom(models.Model):
             new_room = cls.objects.create(is_group=False, creator=user1)
             new_room.participants.add(user1, user2)
         return new_room, True
-
 
 # ------------------------------
 # Message model
