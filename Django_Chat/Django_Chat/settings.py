@@ -113,10 +113,7 @@ CACHES = {
 
 # CORS settings for cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    os.getenv("CORS_ALLOWED_ORIGIN")
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # URL routing configuration
 ROOT_URLCONF = 'Django_Chat.urls'
