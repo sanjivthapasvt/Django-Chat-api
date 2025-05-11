@@ -16,7 +16,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 
 # Hosts allowed to access the app
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+ALLOWED_HOSTS = ["*"]
 
 
 # Installed apps including Django, third-party, and custom apps
