@@ -1,5 +1,5 @@
-# Use an official Python image
-FROM python:alpine@sha256:452682e4648deafe431ad2f2391d726d7c52f0ff291be8bd4074b10379bb89ff AS builder
+#Python image
+FROM python:3.13-slim
 
 # environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -10,8 +10,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy the project files
 COPY . .
 

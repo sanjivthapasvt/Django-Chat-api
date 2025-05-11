@@ -5,3 +5,4 @@ statics/
 __pycache__/
 db.sqlite3
 testing/
+docker-compose.yml
