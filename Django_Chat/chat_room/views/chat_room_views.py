@@ -159,9 +159,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         # Allow a user to leave a group chat
         room = self.get_object()
         
-        if not room.is_group:
-            raise MethodNotAllowed(method='POST', detail="Cannot leave private room")
-        
         user = request.user
         
         if user not in room.participants.all():
@@ -169,7 +166,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
 
         # Prevent last admin from leaving
         if user in room.admins.all() and room.admins.count() == 1:
-            return Response({"detail": "You are the last admin. Assign a new admin before leaving."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Please assign a new admin before leaving."}, status=status.HTTP_400_BAD_REQUEST)
             
         room.participants.remove(user)
         room.admins.remove(user)

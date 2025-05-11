@@ -7,8 +7,10 @@ from django.contrib.auth import get_user_model
 from user_api.serializers import UserSerializer
 User = get_user_model()
 
+
+
 class ChatRoomSerializer(serializers.ModelSerializer):
-    participants = UserSerializer(many=True, read_only=True)
+    participants = serializers.SerializerMethodField()
     admins = UserSerializer(many=True, read_only=True)
     creator = UserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
@@ -52,13 +54,24 @@ class ChatRoomSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.group_image.url)
         return None
     
+    @extend_schema_field(str)
     def get_chat_name(self, obj):
         user = self.context['request'].user
         if obj.is_group or obj.room_name:
             return obj.room_name or 'Nameless Group'
         
         other_participant = obj.participants.exclude(id=user.id).first()
-        return other_participant.username if other_participant else "Anoynomos"
+        return other_participant.username if other_participant else "Unknown"
+    
+    @extend_schema_field(UserSerializer(many=True))
+    def get_participants(self, obj):
+        admin_ids = list(obj.admins.values_list('id', flat=True))
+        serializer = UserSerializer(
+            obj.participants.all(),
+            many=True,
+            context={**self.context, 'chatroom_admin_ids': admin_ids}
+        )
+        return serializer.data
 
 
 class ChatRoomCreateSerializer(serializers.ModelSerializer):
