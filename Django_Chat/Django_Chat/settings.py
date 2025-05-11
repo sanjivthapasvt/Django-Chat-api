@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # Debug mode toggle
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = True
 
 # Hosts allowed to access the app
 ALLOWED_HOSTS = ["*"]
