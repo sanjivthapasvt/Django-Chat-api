@@ -43,9 +43,9 @@ A powerful, scalable chat backend built using **Django** and **Django REST Frame
 
 - **Backend:** Django, Django REST Framework
 - **Authentication:** Token-based
-- **Database:** PostgreSQL (recommended)
+- **Database:** PostgreSQL (recommended), redis for caching
 - **Realtime:** WebSocket via Django Channels
-- **Frontend:** To be built (React/Android app coming soon)
+- **Frontend:** To be built (React currently working on it)
 
 ## 📦 API Endpoints
 
@@ -120,7 +120,7 @@ These WebSocket routes enable real-time functionality:
 ## 🚧 Coming Soon
 
 - [ ] Video/Voice calling via WebRTC
-- [ ] Android and Web frontend
+- [ ] [Web frontend](https://github.com/sanjivthapasvt/Chatapp-frontend)
 
 ## 🚀 Getting Started
 
