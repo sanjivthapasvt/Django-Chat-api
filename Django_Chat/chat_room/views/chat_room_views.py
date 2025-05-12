@@ -6,7 +6,11 @@ from django.shortcuts import get_object_or_404
 from ..models import ChatRoom, User
 from django.db.models import F
 from ..permissions import IsRoomAdmin, IsRoomParticipant
-from ..serializers import ChatRoomCreateSerializer, ChatRoomSerializer, AddMemberSerializer, RemoveMemberSerializer
+from ..serializers import (
+    ChatRoomCreateSerializer, ChatRoomSerializer,
+    AddMemberSerializer, RemoveMemberSerializer,
+    ChatRoomListSerializer
+    )
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -18,16 +22,12 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
-    # Only authenticated users can access chat rooms
     permission_classes = [IsAuthenticated]
-    # Order chat rooms by last message timestamp
     queryset = ChatRoom.objects.all().order_by(F('last_message__timestamp').desc(nulls_last=True))
-    # Enable search and ordering
     filter_backends = {SearchFilter, OrderingFilter}
     search_fields = ['room_name', 'participants__username']
     ordering_fields = ['room_name', 'last_message']
     ordering = ['-last_message__timestamp']
-    # Use cursor pagination
     pagination_class = ChatCursorPagination
 
     def get_queryset(self):
@@ -38,6 +38,8 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         # Use different serializer for creation
         if self.action == 'create':
             return ChatRoomCreateSerializer
+        if self.action == 'list':
+            return ChatRoomListSerializer
         return ChatRoomSerializer
 
     def perform_create(self, serializer):
@@ -131,11 +133,6 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
             return Response({"detail": "User is not a participant in this room."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Prevent removing the last admin
-        if user in room.admins.all() and room.admins.count() == 1:
-            return Response({"detail": "You cannot remove the last admin."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
         room.participants.remove(user)
         room.admins.remove(user)
 
@@ -164,10 +161,10 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
         if user not in room.participants.all():
             return Response({"detail": "You are not a participant of this room."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Prevent last admin from leaving
-        if user in room.admins.all() and room.admins.count() == 1:
+        # Prevent last admin from leaving if the room has more than 2 member
+        if user in room.admins.all() and room.admins.count() == 1 and room.participants.count() > 2:
             return Response({"detail": "Please assign a new admin before leaving."}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         room.participants.remove(user)
         room.admins.remove(user)
         return Response({"detail": "Successfully left the room"}, status=status.HTTP_200_OK)

@@ -1,4 +1,8 @@
-from .chatroom_serializers import ChatRoomSerializer, ChatRoomCreateSerializer, AddMemberSerializer, RemoveMemberSerializer
+from .chatroom_serializers import (
+    ChatRoomSerializer, ChatRoomCreateSerializer,
+    AddMemberSerializer, RemoveMemberSerializer
+    ,ChatRoomListSerializer
+    )
 from .message_serializers import (
     MessageSerializer, MessageCreateSerializer,
     MessageReadStatusSerializer, BasicMessageSerializer

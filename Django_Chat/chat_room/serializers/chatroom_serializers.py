@@ -40,60 +40,99 @@ class ParticipantUserSerializer(serializers.ModelSerializer):
         if obj.first_name or obj.last_name:
             return f"{obj.first_name} {obj.last_name}"
         return None
-    
-class ChatRoomSerializer(serializers.ModelSerializer):
-    participants = serializers.SerializerMethodField()
-    admins = BasicUserSerializer(many=True, read_only=True)
-    creator = BasicUserSerializer(read_only=True)
-    last_message = BasicMessageSerializer(read_only=True)
-    participants_count = serializers.SerializerMethodField()
-    is_admin = serializers.SerializerMethodField()
-    group_image_url = serializers.SerializerMethodField()
-    room_type = serializers.SerializerMethodField()
+
+class ChatRoomListSerializer(serializers.ModelSerializer):
     chat_name = serializers.SerializerMethodField()
+    group_image = serializers.SerializerMethodField()
+    last_message = BasicMessageSerializer(read_only=True)
 
     class Meta:
         model = ChatRoom
+        fields = ['id','group_image', 'chat_name', 'is_group', 'last_message']
+
+    @extend_schema_field(str)
+    def get_chat_name(self, obj):
+        if obj.is_group:
+            return obj.room_name
+        
+        user = self.context.get('request').user
+        other_participants = obj.participants.exclude(id=user.id)
+        
+        if other_participants.exists():
+            participant = other_participants.first()
+            return (participant.first_name and participant.last_name and f"{participant.first_name} {participant.last_name}") or participant.username
+        
+        return None
+
+    @extend_schema_field(str)
+    def get_group_image(self, obj):
+        request = self.context.get('request')
+        
+        def build_absolute_url(relative_url):
+            return request.build_absolute_uri(relative_url) if request and relative_url else None
+
+        if obj.is_group:
+            return build_absolute_url(obj.group_image.url if obj.group_image else None)
+
+        user = request.user
+        other_participants = obj.participants.exclude(id=user.id)
+        if other_participants.exists():
+            participant = other_participants.first()
+            return build_absolute_url(participant.profile_pic.url if participant.profile_pic else None)
+
+        return None
+
+        
+class ChatRoomSerializer(serializers.ModelSerializer):
+    participants = serializers.SerializerMethodField()
+    admins = BasicUserSerializer(many=True, read_only=True)
+    chat_name = serializers.SerializerMethodField()
+    group_image = serializers.SerializerMethodField()
+    class Meta:
+        model = ChatRoom
         fields = [
-            'id', 'room_name', 'is_group', 'created_at', 'creator',
-            'participants', 'admins', 'participants_count',
-            'sharable_room_id', 'last_message', 'group_image',
-            'is_admin', 'room_type', 'group_image_url', 'chat_name'
+            'id', 'is_group', 'participants',
+            'admins', 'group_image','chat_name'
         ]
-        read_only_fields = ['creator', 'sharable_room_id', 'created_at']
 
     @extend_schema_field(int)
     def get_participants_count(self, obj) -> int:
         # Return total number of participants
         return obj.participants.count()
 
-    @extend_schema_field(bool)
-    def get_is_admin(self, obj) -> bool:
-        # Check if current user is an admin in the room
-        request = self.context.get('request')
-        return request and request.user in obj.admins.all()
 
-    @extend_schema_field(str)
-    def get_room_type(self, obj) -> str:
-        # Return 'group' or 'private' based on room type
-        return "group" if obj.is_group else "private"
-
-    @extend_schema_field(Optional[str])
-    def get_group_image_url(self, obj) -> Optional[str]:
-        # Return full URL for group image if it exists
-        request = self.context.get('request')
-        if obj.group_image:
-            return request.build_absolute_uri(obj.group_image.url)
-        return None
-    
     @extend_schema_field(str)
     def get_chat_name(self, obj):
-        user = self.context['request'].user
-        if obj.is_group or obj.room_name:
-            return obj.room_name or 'Nameless Group'
+        if obj.is_group:
+            return obj.room_name
         
-        other_participant = obj.participants.exclude(id=user.id).first()
-        return other_participant.username if other_participant else "Unknown"
+        user = self.context.get('request').user
+        other_participants = obj.participants.exclude(id=user.id)
+        
+        if other_participants.exists():
+            participant = other_participants.first()
+            return (participant.first_name and participant.last_name and f"{participant.first_name} {participant.last_name}") or participant.username
+        
+        return None
+
+    @extend_schema_field(str)
+    def get_group_image(self, obj):
+        request = self.context.get('request')
+        
+        def build_absolute_url(relative_url):
+            return request.build_absolute_uri(relative_url) if request and relative_url else None
+
+        if obj.is_group:
+            return build_absolute_url(obj.group_image.url if obj.group_image else None)
+
+        user = request.user
+        other_participants = obj.participants.exclude(id=user.id)
+        if other_participants.exists():
+            participant = other_participants.first()
+            return build_absolute_url(participant.profile_pic.url if participant.profile_pic else None)
+
+        return None
+
     
     @extend_schema_field(UserSerializer(many=True))
     def get_participants(self, obj):
@@ -119,6 +158,8 @@ class ChatRoomCreateSerializer(serializers.ModelSerializer):
         fields = ['room_name', 'group_image', 'participant_ids']
 
     def validate(self, data):
+        if len(data['participant_ids']) < 2:
+            raise serializers.ValidationError("You cannot include only yourself in the chat")
         if len(data['participant_ids']) + 1 > 50:
             raise serializers.ValidationError("A group cannot have more than 50 members.")
         return data
