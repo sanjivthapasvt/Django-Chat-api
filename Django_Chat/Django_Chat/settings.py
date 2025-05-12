@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Debug mode toggle
-DEBUG = False
+DEBUG = True
 
 # Hosts allowed to access the app
 ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS")]
@@ -95,7 +95,8 @@ SPECTACULAR_SETTINGS = {
 ASGI_APPLICATION = "Django_Chat.asgi.application"
 
 # Channel layers configuration for WebSocket support using Redis
-redis_url = os.getenv("REDIS_URL")
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
+
 
 CHANNEL_LAYERS = {
     "default": {

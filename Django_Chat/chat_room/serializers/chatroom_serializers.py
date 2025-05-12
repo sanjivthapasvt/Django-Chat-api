@@ -2,17 +2,49 @@ from rest_framework import serializers
 from typing import Optional
 from drf_spectacular.utils import extend_schema_field
 from ..models import ChatRoom
-from .message_serializers import BasicMessageSerializer
+from .message_serializers import BasicMessageSerializer, BasicUserSerializer
 from django.contrib.auth import get_user_model
 from user_api.serializers import UserSerializer
 User = get_user_model()
+from django_redis import get_redis_connection
 
 
+class ParticipantUserSerializer(serializers.ModelSerializer):
+    is_admin = serializers.SerializerMethodField()
+    online_status = serializers.SerializerMethodField()
+    last_seen = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = ['id', 'username','full_name', 'is_admin' ,'profile_pic','online_status', 'last_seen']
+        read_only_fields = ['id', 'username', 'email']
+    
+    def get_online_status(self, obj) -> bool:
+        conn = get_redis_connection("default")
+        return conn.get(f"user:{obj.id}:online") == b"1"
+    
 
+    def get_last_seen(self, obj) -> str:
+        conn = get_redis_connection("default")
+        last_seen = conn.get(f"user:{obj.id}:last_seen")
+        if last_seen:
+            import datetime
+            return datetime.datetime.fromisoformat(last_seen.decode())
+        return None
+    
+    def get_is_admin(self, obj) -> bool:
+        admin_ids = self.context.get('chatroom_admin_ids', [])
+        return obj.id in admin_ids
+    
+    def get_full_name(self, obj) -> str:
+        if obj.first_name or obj.last_name:
+            return f"{obj.first_name} {obj.last_name}"
+        return None
+    
 class ChatRoomSerializer(serializers.ModelSerializer):
     participants = serializers.SerializerMethodField()
-    admins = UserSerializer(many=True, read_only=True)
-    creator = UserSerializer(read_only=True)
+    admins = BasicUserSerializer(many=True, read_only=True)
+    creator = BasicUserSerializer(read_only=True)
     last_message = BasicMessageSerializer(read_only=True)
     participants_count = serializers.SerializerMethodField()
     is_admin = serializers.SerializerMethodField()
@@ -66,7 +98,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
     @extend_schema_field(UserSerializer(many=True))
     def get_participants(self, obj):
         admin_ids = list(obj.admins.values_list('id', flat=True))
-        serializer = UserSerializer(
+        serializer = ParticipantUserSerializer(
             obj.participants.all(),
             many=True,
             context={**self.context, 'chatroom_admin_ids': admin_ids}
