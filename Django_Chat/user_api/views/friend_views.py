@@ -186,41 +186,31 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    
-class FriendViewSet(viewsets.ViewSet):
+class FriendModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     
-    @action(detail=False, methods=['get'])
-    def list_friends(self, request):
+    def get_queryset(self):
+        queryset = self.request.user.friends.all()
+        search = self.request.query_params.get("search")
+        if search:
+            queryset = queryset.filter(username__icontains=search)
+        return queryset
+    
+    def retrieve(self, request, *args, **kwargs):
         try:
-            search = request.query_params.get("search")
-            friends = request.user.friends.all()
-            if search:
-                friends = friends.filter(username__icontains=search)
-
-            serialized_friends = self.serializer_class(friends, many=True).data
-            return Response(serialized_friends, status=status.HTTP_200_OK)
+            friend = request.user.friends.filter(pk=kwargs.get('pk')).first()
+            if not friend:
+                return Response({"error": "Friend not found."}, status=status.HTTP_404_NOT_FOUND)
+            serialized_friend = self.serializer_class(friend).data
+            return Response(serialized_friend, status=status.HTTP_200_OK)
+        
         except Exception as e:
             return Response(
                 {"error": f"An unexpected error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    def retrieve(self, request, pk=None):
-        try:
-            friend = request.user.friends.filter(pk=pk).first()
-            if not friend:
-                return Response({"error": "Friend not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            serialized_friend = self.serializer_class(friend).data
-            return Response(serialized_friend, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response(
-                {"error": f"An unexpected error occurred: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-            
     @action(detail=True, methods=['post'])
     def remove_friend(self, request, pk=None):
         try:
@@ -229,27 +219,39 @@ class FriendViewSet(viewsets.ViewSet):
             return Response(
                 {"error": "User not found."},
                 status=status.HTTP_404_NOT_FOUND
-            )            
-        # Checking if they are actually friends
+            )
+            
         if not request.user.friends.filter(id=friend.id).exists():
             return Response(
                 {"error": "This user is not in your friends list."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-                
+            
         # Remove the friends
         with transaction.atomic():
             request.user.friends.remove(friend)
             friend.friends.remove(request.user)
-        #to delete the relation with friend
-        FriendRequest.objects.filter(
-            from_user=request.user, to_user=friend, status='accepted'
-        ).delete()
-
-        FriendRequest.objects.filter(
-            from_user=friend, to_user=request.user, status='accepted'
-        ).delete()
+            # Delete the relation with friend
+            FriendRequest.objects.filter(
+                from_user=request.user, to_user=friend, status='accepted'
+            ).delete()
+            FriendRequest.objects.filter(
+                from_user=friend, to_user=request.user, status='accepted'
+            ).delete()
+            
         return Response(
             {"detail": f"Successfully removed {friend.username} from your friends list."},
             status=status.HTTP_200_OK
         )
+    
+    def create(self, request, *args, **kwargs):
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+    def update(self, request, *args, **kwargs):
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+    def partial_update(self, request, *args, **kwargs):
+        return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        
+    def destroy(self, request, *args, **kwargs):
+        return self.remove_friend(request, pk=kwargs.get('pk'))

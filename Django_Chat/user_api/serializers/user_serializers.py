@@ -6,16 +6,16 @@ from django_redis import get_redis_connection
 
 
 class UserSerializer(serializers.ModelSerializer):
-    is_admin = serializers.SerializerMethodField()
     online_status = serializers.SerializerMethodField()
     last_seen = serializers.SerializerMethodField()
     bio = serializers.CharField()
     friends = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True
     )
+    full_name = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'username','bio', 'is_admin', 'email', 'first_name', 'last_name','friends', 'profile_pic','online_status', 'last_seen']
+        fields = ['id', 'username','bio', 'email', 'full_name', 'friends', 'profile_pic','online_status', 'last_seen']
         read_only_fields = ['id', 'username', 'email']
     
     def get_online_status(self, obj) -> bool:
@@ -30,10 +30,12 @@ class UserSerializer(serializers.ModelSerializer):
             import datetime
             return datetime.datetime.fromisoformat(last_seen.decode())
         return None
-    
-    def get_is_admin(self, obj) -> bool:
-        admin_ids = self.context.get('chatroom_admin_ids', [])
-        return obj.id in admin_ids
+
+    def get_full_name(self, obj) -> str:
+        if obj.first_name or obj.last_name:
+            return f"{obj.first_name} {obj.last_name}"
+        return None
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
