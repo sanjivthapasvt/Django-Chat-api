@@ -19,20 +19,21 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-
+from django.db.models.functions import Coalesce
 
 class ChatRoomViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = ChatRoom.objects.all().order_by(F('last_message__timestamp').desc(nulls_last=True))
+    queryset = ChatRoom.objects.all()
     filter_backends = {SearchFilter, OrderingFilter}
     search_fields = ['room_name', 'participants__username']
-    ordering_fields = ['room_name', 'last_message']
-    ordering = ['-last_message__timestamp']
+    ordering_fields = ['room_name']
+    ordering = ['-sort_time']
     pagination_class = ChatCursorPagination
 
     def get_queryset(self):
-        # Return chat rooms the user participates in
-        return ChatRoom.objects.filter(participants=self.request.user)
+        return ChatRoom.objects.annotate(
+            sort_time=Coalesce('last_message__timestamp', 'created_at')
+        ).order_by('-sort_time')
 
     def get_serializer_class(self):
         # Use different serializer for creation

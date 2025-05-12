@@ -8,6 +8,11 @@ from django.db import transaction, IntegrityError
 from ..models import FriendRequest, User
 from ..serializers import FriendRequestSerializer, UserSerializer
 from chat_room.models import ChatRoom
+from chat_room.serializers import ChatRoomSerializer
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 class FriendRequestViewSet(viewsets.ModelViewSet):
@@ -120,9 +125,28 @@ class FriendRequestViewSet(viewsets.ModelViewSet):
                     room_name=f"{request.user.username}_{friend_request.from_user.username}"
                 )
                 chat_room.participants.set([request.user, friend_request.from_user])
+                channel_layer = get_channel_layer()
+                serialized_data = ChatRoomSerializer(
+                    chat_room, 
+                    context=self.get_serializer_context()
+                ).data
+                json_data = json.dumps(serialized_data, cls=DjangoJSONEncoder)
+                safe_data = json.loads(json_data)
+                
+                async_to_sync(channel_layer.group_send)(
+                    "sidebar",
+                    {
+                        "type": "group.update",
+                        "data": {
+                            "type": "group_created",
+                            "group": safe_data
+                        }
+                    }
+                )
             return Response({"detail": "Friend request accepted."}, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         except Exception as e:
             return Response(
                 {"error": f"An unexpected error occurred: {str(e)}"},
