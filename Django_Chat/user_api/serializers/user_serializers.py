@@ -93,7 +93,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(write_only=True, required=False)
     new_password = serializers.CharField(write_only=True, required=False)
     confirm_password = serializers.CharField(write_only=True, required=False)
-    bio = serializers.CharField()
+    bio = serializers.CharField(required=False)
     class Meta:
         model = User
         fields = ["first_name", 'bio', "last_name", "email", "profile_pic", "old_password", "new_password", "confirm_password"]

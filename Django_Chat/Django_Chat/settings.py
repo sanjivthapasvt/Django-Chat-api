@@ -10,14 +10,17 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secret key for cryptographic signing
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # Debug mode toggle
-DEBUG = True
+DEBUG = False
 
 # Hosts allowed to access the app
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS")]
 
+CSRF_TRUSTED_ORIGINS = [
+    os.getenv("CSRF_ALLOWED")
+]
 
 # Installed apps including Django, third-party, and custom apps
 INSTALLED_APPS = [
@@ -40,6 +43,7 @@ INSTALLED_APPS = [
 
 # Middleware stack for request/response processing
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -91,11 +95,13 @@ SPECTACULAR_SETTINGS = {
 ASGI_APPLICATION = "Django_Chat.asgi.application"
 
 # Channel layers configuration for WebSocket support using Redis
+redis_url = os.getenv("REDIS_URL")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379, 6380)],
+            "hosts": [redis_url],
         },
     },
 }
@@ -103,7 +109,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://redis:6379/1',
+        'LOCATION': redis_url + "/1",
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -134,8 +140,10 @@ TEMPLATES = [
     },
 ]
 
-# WSGI application (used only if running traditional synchronous servers)
+
+# WSGI application (used if running  synchronous servers)
 WSGI_APPLICATION = 'Django_Chat.wsgi.application'
+
 
 # PostgreSQL database configuration using environment variable
 DATABASES = {
@@ -161,8 +169,13 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files configuration
-STATIC_URL = 'static/'
+STATIC_URL = '/static'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+#Media file configuration
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Default auto field type for primary keys
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
