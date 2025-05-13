@@ -1,4 +1,3 @@
-# myapp/serializers.py
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import get_user_model
@@ -8,8 +7,7 @@ User = get_user_model()
 # serializers.py
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework import serializers
+from rest_framework_simplejwt.exceptions import InvalidToken
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
