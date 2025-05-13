@@ -31,7 +31,7 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
     pagination_class = ChatCursorPagination
 
     def get_queryset(self):
-        return ChatRoom.objects.annotate(
+        return ChatRoom.objects.filter(participants=self.request.user).annotate(
             sort_time=Coalesce('last_message__timestamp', 'created_at')
         ).order_by('-sort_time')
 
