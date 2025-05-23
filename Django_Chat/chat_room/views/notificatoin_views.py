@@ -2,14 +2,13 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..permissions import IsRoomParticipant
+from ..permissions import  IsNotificationOwner, IsRoomParticipant
 from ..models import Notification
 from ..serializers import NotificationSerializer
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 class NotificationViewSet(viewsets.ModelViewSet):
     # Only authenticated room participants can access notifications
-    permission_classes = [IsAuthenticated, IsRoomParticipant]
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     filter_backends = (OrderingFilter, SearchFilter)
@@ -21,6 +20,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
         # Return only notifications for the current user
         return Notification.objects.filter(user=self.request.user).order_by('-timestamp')
 
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticated(), IsRoomParticipant()]
+        return [IsAuthenticated(), IsNotificationOwner()]
+    
     @action(detail=False, methods=['get'])
     def unread(self, request):
         # Return all unread notifications for the user

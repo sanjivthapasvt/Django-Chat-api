@@ -112,7 +112,7 @@ class ChatRoomSerializer(serializers.ModelSerializer):
         if other_participants.exists():
             participant = other_participants.first()
             return (participant.first_name and participant.last_name and f"{participant.first_name} {participant.last_name}") or participant.username
-        
+
         return None
 
     @extend_schema_field(str)
